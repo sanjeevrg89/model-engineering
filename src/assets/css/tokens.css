@@ -1,0 +1,170 @@
+/* ==========================================================================
+   TWO ENGINES — design brief
+   --------------------------------------------------------------------------
+   Subject     The internals of two LLM inference engines, vLLM and SGLang:
+               schedulers, KV-cache pages and radix trees, CUDA graphs,
+               kernels, process boundaries, fleets of GPUs and TPUs.
+   Job         In eight seconds an ML/infra engineer believes: "this is where
+               I learn how vLLM and SGLang actually work, side by side, from
+               the real code", and sees a mechanism moving.
+   Reference   A two-channel oscilloscope / logic analyser (CH A, CH B on one
+   world       clock), GPU profiler timelines (tracks, kernel bars, ns rulers),
+               allocator memory maps (page frames), and component datasheets
+               (spec tables, revision blocks, part numbers).
+   Palette     paper #F3F5F6 · panel #FFFFFF · ink #14181D · rule #D5DBE0
+               channel A (vLLM) cobalt #1E5BCF · channel B (SGLang) ochre #A8560A
+               semantic good #18794E · bad #C23B2E (never used for engines)
+               Neutrals lean cool/blue to sit with the cobalt channel.
+   Type        Display  Archivo (variable width, set semi-expanded, heavy)
+               Body     Source Serif 4 (optical sizes; long-form reading)
+               Data     JetBrains Mono (code, line numbers, step counters)
+               Labels   Archivo condensed caps, tracked +0.08em
+   Signature   The two-channel instrument: every chapter's main figure runs
+               the same workload through vLLM (CH A) and SGLang (CH B) on one
+               shared clock, stepped with ← →, with a Δ marker on the ruler
+               wherever the two engines make different decisions.
+   ========================================================================== */
+
+:root {
+  /* --- palette: light ---------------------------------------------------- */
+  --paper: #f3f5f6;
+  --panel: #ffffff;
+  --panel-2: #f8f9fa;
+  --sunk: #eaeef0;
+  --ink: #14181d;
+  --ink-2: #434c56;
+  --ink-3: #616b75;
+  --rule: #d5dbe0;
+  --rule-2: #e5e9ec;
+  --grat: #e9edf0;            /* instrument graticule */
+
+  --a: #1e5bcf;               /* channel A · vLLM */
+  --a-strong: #1748a6;
+  --a-tint: #e4ecfb;
+  --a-tint-2: #c9d9f7;
+  --a-ink: #163d8a;
+
+  --b: #a8560a;               /* channel B · SGLang */
+  --b-strong: #8a4507;
+  --b-tint: #fbecdc;
+  --b-tint-2: #f4d3b0;
+  --b-ink: #6e3906;
+
+  --good: #18794e;
+  --good-tint: #dff2e8;
+  --bad: #c23b2e;
+  --bad-tint: #fae3df;
+  --mark: #fff1a8;            /* highlighter for "this line" in code */
+  --delta-bg: #14181d;        /* the Δ strip: an inverted band */
+
+  --shadow: 0 1px 0 rgba(20, 24, 29, 0.04), 0 8px 24px -12px rgba(20, 24, 29, 0.18);
+
+  /* --- type ---------------------------------------------------------------- */
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Serif 4", "Source Serif Pro", Charter, "Iowan Old Style", Georgia, serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* modular scale, ~1.25, fluid at the top end */
+  --t-xs: 0.72rem;   /* 11.5px labels */
+  --t-sm: 0.84rem;   /* 13.4px UI, captions */
+  --t-md: 1rem;      /* 16px dense UI */
+  --t-body: clamp(1.03rem, 0.98rem + 0.25vw, 1.125rem);  /* 16.5 → 18px */
+  --t-lg: 1.3rem;
+  --t-xl: clamp(1.45rem, 1.3rem + 0.6vw, 1.72rem);
+  --t-2xl: clamp(1.75rem, 1.45rem + 1.2vw, 2.25rem);
+  --t-3xl: clamp(2.3rem, 1.7rem + 2.6vw, 3.4rem);
+  --t-hero: clamp(3rem, 1.6rem + 6vw, 6.4rem);
+
+  /* --- space ---------------------------------------------------------------- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 72px;
+  --s-9: 112px;
+
+  --measure: 66ch;
+  --main: 690px;
+  --wide: 1060px;
+  --rail: 284px;
+  --topbar: 56px;
+  --radius: 4px;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur: 380ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #0e1114;
+    --panel: #151a1f;
+    --panel-2: #1a2026;
+    --sunk: #0b0e10;
+    --ink: #e6eaee;
+    --ink-2: #b0b8c1;
+    --ink-3: #8a949e;
+    --rule: #2c333b;
+    --rule-2: #222830;
+    --grat: #1d232a;
+
+    --a: #7ea5ff;
+    --a-strong: #a4c0ff;
+    --a-tint: #16223b;
+    --a-tint-2: #22345a;
+    --a-ink: #bcd0ff;
+
+    --b: #f0a24a;
+    --b-strong: #ffc07a;
+    --b-tint: #33230f;
+    --b-tint-2: #4c3415;
+    --b-ink: #ffd29d;
+
+    --good: #4fc58c;
+    --good-tint: #12291e;
+    --bad: #ff7d6e;
+    --bad-tint: #3a1814;
+    --mark: #4a3f0a;
+    --delta-bg: #bcc4cc;
+
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0e1114;
+  --panel: #151a1f;
+  --panel-2: #1a2026;
+  --sunk: #0b0e10;
+  --ink: #e6eaee;
+  --ink-2: #b0b8c1;
+  --ink-3: #8a949e;
+  --rule: #2c333b;
+  --rule-2: #222830;
+  --grat: #1d232a;
+
+  --a: #7ea5ff;
+  --a-strong: #a4c0ff;
+  --a-tint: #16223b;
+  --a-tint-2: #22345a;
+  --a-ink: #bcd0ff;
+
+  --b: #f0a24a;
+  --b-strong: #ffc07a;
+  --b-tint: #33230f;
+  --b-tint-2: #4c3415;
+  --b-ink: #ffd29d;
+
+  --good: #4fc58c;
+  --good-tint: #12291e;
+  --bad: #ff7d6e;
+  --bad-tint: #3a1814;
+  --mark: #4a3f0a;
+  --delta-bg: #bcc4cc;
+
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+}

@@ -1,0 +1,18 @@
+<p>Kimi Linear's MLA layers add no position embeddings at all; Llama 4 interleaves RoPE layers with bare ones. This chapter asks who carries position when attention stops doing it.</p>
+
+<h2 id="outline"><span class="h-num">10.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>NoPE attention and the recurrent layers that carry position instead.</li>
+  <li>iRoPE: interleaved rotary and bare layers in Llama 4 Scout.</li>
+  <li>What length generalization each choice buys, and what it risks.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2025">2025 timeline</a> has both releases, and chapter 3 has the RoPE baseline.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Position is a job, not a layer: it can move out of attention if something else takes it.</li>
+  </ul>
+</div>

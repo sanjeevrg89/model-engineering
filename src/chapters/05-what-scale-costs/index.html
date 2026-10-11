@@ -1,0 +1,18 @@
+<p>One token through Qwen2.5-7B costs about 15 GFLOP before attention; through DeepSeek-V3 it costs hundreds. This chapter counts parameters honestly, doubles them into FLOPs, and builds the roofline floors every later chapter reuses.</p>
+
+<h2 id="outline"><span class="h-num">5.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>Parameter counts from 7B to 2.8T, tensor by tensor, against the shard headers.</li>
+  <li>Two FLOPs per weight per token, and what attention adds on top.</li>
+  <li>The floor formula: max(bytes over bandwidth, FLOPs over peak), on the H200 SXM.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2026">2026 timeline</a> shows where scale went, and the lab computes the floors by hand.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Scale arithmetic is exact from configs and datasheets; everything else in the course is a delta on top of it.</li>
+  </ul>
+</div>

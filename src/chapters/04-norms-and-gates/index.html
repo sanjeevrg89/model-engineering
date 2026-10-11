@@ -1,0 +1,18 @@
+<p>Ninety-two layers train because of two quiet choices: RMSNorm before every sublayer and a gate multiplied into every feed-forward. This chapter opens both, then shows Qwen3's extra QK-norm on the attention path.</p>
+
+<h2 id="outline"><span class="h-num">4.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>RMSNorm against LayerNorm: what the missing mean costs and saves.</li>
+  <li>SwiGLU's three matrices and why the gate helps depth.</li>
+  <li>QK-norm per head in Qwen3-8B and what it stabilizes.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2025">2025 timeline</a> has the Qwen3 release, and chapter 1's block figure shows where both pieces sit.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Norms and gates are the load-bearing walls: every roster model keeps both, and depth scales on top of them.</li>
+  </ul>
+</div>

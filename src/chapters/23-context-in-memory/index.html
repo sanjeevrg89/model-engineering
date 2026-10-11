@@ -1,0 +1,18 @@
+<p>A full 131,072-token context weighs 7.5 GB beside Qwen2.5-7B's 15 GB of weights, and 1M tokens beside Kimi-K3's terabytes need a fleet. This chapter multiplies every roster budget to full context and checks what fits on one H200.</p>
+
+<h2 id="outline"><span class="h-num">23.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>State bytes at max context for all fifteen roster models.</li>
+  <li>Weights plus state plus buffers against 141 GB.</li>
+  <li>Which designs stay single-GPU to 1M tokens, and which never could.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2026">2026 timeline</a> has the context race, and chapter 20 has the per-token budgets.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Context length is a memory claim; multiply it out before believing it.</li>
+  </ul>
+</div>

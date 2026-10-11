@@ -1,0 +1,18 @@
+<p>A recurrent layer that rewrites what it remembers with a delta rule, gated Mamba-style. This chapter runs full attention against Gated DeltaNet: the update, the two gates, and the 3:1 hybrid that carried Qwen3-Next.</p>
+
+<h2 id="outline"><span class="h-num">17.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>The delta update beside Mamba-2's state update.</li>
+  <li>Alpha and beta gates: forgetting and writing per step.</li>
+  <li>Why three linear layers per attention layer won the ratio search.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2025">2025 timeline</a> has the hybrid season, and chapter 16 has the SSM baseline.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>DeltaNet is fast weights with learned forgetting; the hybrid ratio is the quality dial.</li>
+  </ul>
+</div>

@@ -1,0 +1,49 @@
+name: check
+
+# Verifies every source reference against the pinned revisions, rebuilds every
+# excerpt, and runs each lab's tests against its reference solution.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Cache pinned sources
+        uses: actions/cache@v4
+        with:
+          path: .cache/src
+          key: sources-${{ hashFiles('course.json') }}
+
+      - name: Fetch pinned sources
+        run: node scripts/fetch-sources.mjs
+
+      - name: Strict build (refs, symbols, excerpts)
+        run: node scripts/build.mjs --strict
+
+      - name: Internal links and anchors
+        run: node scripts/check-links.mjs
+
+      - name: Arithmetic bench matches the answer key
+        run: uv run --project bench python -m bench.calc --check
+
+      - name: Capstone self-test (no network, no GPU)
+        run: uv run pytest capstones/selftest -q
+
+      - name: Lab solutions pass (CPython)
+        run: LAB_SOLUTION=1 uv run pytest labs
+
+      - name: Lab solutions pass (Pyodide, as in the browser)
+        run: |
+          npm install --no-save pyodide@314.0.7
+          node scripts/check-labs-pyodide.mjs

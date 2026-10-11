@@ -1,0 +1,594 @@
+{
+  "site": {
+    "title": "Every Model",
+    "tagline": "Every architecture since ChatGPT, side by side, from the source",
+    "description": "How every important model architecture since ChatGPT works, from the LLaMA recipe through GQA, MoE, MLA, hybrids, sparse attention and diffusion: one workload, two landmark designs per chapter, every claim pinned to a config or a line of code.",
+    "checked": "2026-10-11",
+    "repoUrl": "https://github.com/sanjeevrg89/model-engineering",
+    "url": "https://model-engineering.behindthetoken.workers.dev/",
+    "author": "sanjeevrg89"
+  },
+  "sources": {
+    "hf-transformers": {
+      "name": "Transformers",
+      "repo": "huggingface/transformers",
+      "tag": "v5.9.0",
+      "commit": "0a2757da521a7a49b8143d9e0c938f08747d682e",
+      "channel": "x",
+      "letter": "H",
+      "dir": "hf-transformers"
+    },
+    "mamba": {
+      "name": "Mamba",
+      "repo": "state-spaces/mamba",
+      "tag": "v2.3.1",
+      "commit": "c5afbdf3bda1a09d68f65181ae3a43ec71079820",
+      "channel": "x",
+      "letter": "M",
+      "dir": "mamba"
+    },
+    "vllm": {
+      "name": "vLLM",
+      "repo": "vllm-project/vllm",
+      "tag": "v0.30.0",
+      "commit": "ced6857afa0ea7b2e3f0846a62e1394e90f15607",
+      "channel": "x",
+      "letter": "V",
+      "dir": "vllm"
+    },
+    "sglang": {
+      "name": "SGLang",
+      "repo": "sgl-project/sglang",
+      "tag": "v0.5.21",
+      "commit": "e00930c5489053f26d86b179cee0d087f846acbb",
+      "channel": "x",
+      "letter": "S",
+      "dir": "sglang"
+    },
+    "qwen25-7b": {
+      "name": "Qwen2.5-7B",
+      "host": "hf",
+      "repo": "Qwen/Qwen2.5-7B",
+      "tag": "rev d149729",
+      "commit": "d149729398750b98c0af14eb82c78cfe92750796",
+      "channel": "x",
+      "letter": "Q",
+      "dir": "models/qwen25-7b",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "mistral-7b": {
+      "name": "Mistral-7B-v0.1",
+      "host": "hf",
+      "repo": "mistralai/Mistral-7B-v0.1",
+      "tag": "rev 27d67f1",
+      "commit": "27d67f1b5f57dc0953326b2601d68371d40ea8da",
+      "channel": "x",
+      "letter": "W",
+      "dir": "models/mistral-7b",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "mixtral-8x7b": {
+      "name": "Mixtral-8x7B-v0.1",
+      "host": "hf",
+      "repo": "mistralai/Mixtral-8x7B-v0.1",
+      "tag": "rev fc7ac94",
+      "commit": "fc7ac94680e38d7348cfa806e51218e6273104b0",
+      "channel": "x",
+      "letter": "X",
+      "dir": "models/mixtral-8x7b",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "dsv2-lite": {
+      "name": "DeepSeek-V2-Lite",
+      "host": "hf",
+      "repo": "deepseek-ai/DeepSeek-V2-Lite",
+      "tag": "rev 604d566",
+      "commit": "604d5664dddd88a0433dbae533b7fe9472482de0",
+      "channel": "x",
+      "letter": "D",
+      "dir": "models/dsv2-lite",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "dsv3": {
+      "name": "DeepSeek-V3",
+      "host": "hf",
+      "repo": "deepseek-ai/DeepSeek-V3",
+      "tag": "rev e815299",
+      "commit": "e815299b0bcbac849fa540c768ef21845365c9eb",
+      "channel": "x",
+      "letter": "D",
+      "dir": "models/dsv3",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "qwen3-8b": {
+      "name": "Qwen3-8B",
+      "host": "hf",
+      "repo": "Qwen/Qwen3-8B",
+      "tag": "rev b968826",
+      "commit": "b968826d9c46dd6066d109eabc6255188de91218",
+      "channel": "x",
+      "letter": "Q",
+      "dir": "models/qwen3-8b",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "glm45": {
+      "name": "GLM-4.5",
+      "host": "hf",
+      "repo": "zai-org/GLM-4.5",
+      "tag": "rev cbb2c7c",
+      "commit": "cbb2c7cfb52fa128a9660cb1a7a78e017899e115",
+      "channel": "x",
+      "letter": "Z",
+      "dir": "models/glm45",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "gptoss-120b": {
+      "name": "gpt-oss-120B",
+      "host": "hf",
+      "repo": "openai/gpt-oss-120b",
+      "tag": "rev b5c939d",
+      "commit": "b5c939de8f754692c1647ca79fbf85e8c1e70f8a",
+      "channel": "x",
+      "letter": "O",
+      "dir": "models/gptoss-120b",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "kimi-k2": {
+      "name": "Kimi-K2-Instruct",
+      "host": "hf",
+      "repo": "moonshotai/Kimi-K2-Instruct",
+      "tag": "rev fd1984e",
+      "commit": "fd1984e2b7a3350dbf7305fe73a4ede25c14de50",
+      "channel": "x",
+      "letter": "K",
+      "dir": "models/kimi-k2",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "dsv32-exp": {
+      "name": "DeepSeek-V3.2-Exp",
+      "host": "hf",
+      "repo": "deepseek-ai/DeepSeek-V3.2-Exp",
+      "tag": "rev 194c67e",
+      "commit": "194c67e12b1b0d6df0ef373ddcf215bc84027409",
+      "channel": "x",
+      "letter": "D",
+      "dir": "models/dsv32-exp",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "llada-8b": {
+      "name": "LLaDA-8B-Base",
+      "host": "hf",
+      "repo": "GSAI-ML/LLaDA-8B-Base",
+      "tag": "rev 0f2787f",
+      "commit": "0f2787f2d87eac5eed8a087d5ecd24277e6255b2",
+      "channel": "x",
+      "letter": "L",
+      "dir": "models/llada-8b",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "minimax-m25": {
+      "name": "MiniMax-M2.5",
+      "host": "hf",
+      "repo": "MiniMaxAI/MiniMax-M2.5",
+      "tag": "rev f710177",
+      "commit": "f710177d938eff80b684d42c5aa84b382612f21f",
+      "channel": "x",
+      "letter": "N",
+      "dir": "models/minimax-m25",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "kimi-k3": {
+      "name": "Kimi-K3",
+      "host": "hf",
+      "repo": "moonshotai/Kimi-K3",
+      "tag": "rev f831ab6",
+      "commit": "f831ab66814297da540d832a5235f8e904f29d06",
+      "channel": "x",
+      "letter": "K",
+      "dir": "models/kimi-k3",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "glm53": {
+      "name": "GLM-5.3",
+      "host": "hf",
+      "repo": "zai-org/GLM-5.3",
+      "tag": "rev aca966e",
+      "commit": "aca966e4e02791568aa6a4ced368624b3d897f42",
+      "channel": "x",
+      "letter": "Z",
+      "dir": "models/glm53",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    "dsv41-flash": {
+      "name": "DeepSeek-V4.1-Flash",
+      "host": "hf",
+      "repo": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "tag": "rev 2cba9e4",
+      "commit": "2cba9e42aa026125f3ed06c6d98c1db82f7ca027",
+      "channel": "x",
+      "letter": "D",
+      "dir": "models/dsv41-flash",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json"
+      ]
+    }
+  },
+  "parts": [
+    {
+      "id": "recipe",
+      "num": "I",
+      "title": "The recipe everyone inherited",
+      "dek": "ChatGPT goes mainstream, LLaMA leaks the recipe, and every open model since cooks a variation: one decoder block, a tokenizer, a position scheme and a scale.",
+      "chapters": [
+        {
+          "slug": "01-one-block",
+          "num": 1,
+          "title": "One block to learn them all",
+          "question": "What is the smallest piece every model since ChatGPT shares?",
+          "dek": "RMSNorm, grouped-query attention and a SwiGLU feed-forward in one residual block. Qwen2.5-7B on channel A, Mistral-7B on channel B, the same token through both.",
+          "minutes": 25,
+          "lab": true
+        },
+        {
+          "slug": "02-tokens-in-ids-out",
+          "num": 2,
+          "title": "Words in, ids out",
+          "question": "Why does one model need 32,000 words and another 201,088?",
+          "dek": "Vocabularies from 32k to 201k across the roster, untied embeddings everywhere, and what the LM head costs per step.",
+          "minutes": 20,
+          "lab": false
+        },
+        {
+          "slug": "03-where-am-i",
+          "num": 3,
+          "title": "Where am I in 131,072 tokens?",
+          "question": "How does a model know token 100,000 comes after token 99,999?",
+          "dek": "Rotary embeddings from theta 10k to 5M, YaRN extension, and the layers that stopped using positions at all.",
+          "minutes": 25,
+          "lab": true
+        },
+        {
+          "slug": "04-norms-and-gates",
+          "num": 4,
+          "title": "Norms and gates",
+          "question": "What keeps a 92-layer model trainable?",
+          "dek": "RMSNorm everywhere, SwiGLU feed-forwards, and QK-norm on the attention path in Qwen3.",
+          "minutes": 20,
+          "lab": false
+        },
+        {
+          "slug": "05-what-scale-costs",
+          "num": 5,
+          "title": "What scale costs",
+          "question": "How many FLOPs does one token cost, before any cleverness?",
+          "dek": "Parameter counts from 7B to 1T, two FLOPs per weight per token, and the roofline floors every later chapter reuses.",
+          "minutes": 25,
+          "lab": true
+        }
+      ]
+    },
+    {
+      "id": "attention",
+      "num": "II",
+      "title": "Cheaper attention",
+      "dek": "The KV cache grows with every token, so a decade of attention variants competes to shrink it: share heads, shorten windows, compress latents, skip tokens.",
+      "chapters": [
+        {
+          "slug": "06-share-the-keys",
+          "num": 6,
+          "title": "Share the keys",
+          "question": "Why do 28 query heads share 4 key heads?",
+          "dek": "Multi-head to grouped-query attention, the repeat_kv verbatim, and KV bytes per token for every roster model.",
+          "minutes": 30,
+          "lab": true
+        },
+        {
+          "slug": "07-look-nearby",
+          "num": 7,
+          "title": "Look nearby, remember far",
+          "question": "What does a 4,096-token window remember about token 1?",
+          "dek": "Sliding-window attention from Mistral's 4,096 to gpt-oss's 128, and which layers get the full window.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "08-compress-the-cache",
+          "num": 8,
+          "title": "Compress the cache",
+          "question": "How do you cache one 512-number latent instead of 128 key-value pairs?",
+          "dek": "Multi-head latent attention from DeepSeek-V2-Lite to Kimi-K2: low-rank projection, decoupled RoPE, absorbed inference.",
+          "minutes": 35,
+          "lab": true
+        },
+        {
+          "slug": "09-attend-to-thousands",
+          "num": 9,
+          "title": "Attend to 2,048 of 131,072",
+          "question": "Who decides which past tokens deserve full attention?",
+          "dek": "DeepSeek sparse attention: a lightning indexer scores every past token and 2,048 winners get the real attention, from the V3.2 experiment to the 753B GLM-5.3 flagship.",
+          "minutes": 30,
+          "lab": true
+        },
+        {
+          "slug": "10-positions-without-embeddings",
+          "num": 10,
+          "title": "Positions without embeddings",
+          "question": "What happens when attention layers stop adding positions?",
+          "dek": "NoPE in Kimi Linear's MLA layers and interleaved RoPE in Llama 4's iRoPE, and who carries position instead.",
+          "minutes": 25,
+          "lab": false
+        }
+      ]
+    },
+    {
+      "id": "experts",
+      "num": "III",
+      "title": "Many experts",
+      "dek": "Capacity without the compute bill: a router wakes a few expert feed-forwards per token, from 8 coarse experts to 384 fine ones.",
+      "chapters": [
+        {
+          "slug": "11-eight-experts-two-awake",
+          "num": 11,
+          "title": "Eight experts, two awake",
+          "question": "How does a 47B model cost 13B per token?",
+          "dek": "Mixtral's coarse MoE: one gate, top-2 of 8 experts, and the load-balancing problem every later design answers.",
+          "minutes": 30,
+          "lab": true
+        },
+        {
+          "slug": "12-tiny-experts",
+          "num": 12,
+          "title": "Tiny experts",
+          "question": "Why do 256 small experts beat 8 big ones?",
+          "dek": "DeepSeek-V3's fine-grained MoE: 256 routed experts, 8 active, the first 3 layers dense, and what each token actually touches.",
+          "minutes": 30,
+          "lab": true
+        },
+        {
+          "slug": "13-shared-expert",
+          "num": 13,
+          "title": "The expert that never sleeps",
+          "question": "What does every token need, no matter the topic?",
+          "dek": "The shared expert from DeepSeekMoE to V3: common knowledge in one always-on path, specialization in the routed ones.",
+          "minutes": 20,
+          "lab": false
+        },
+        {
+          "slug": "14-apache-moe",
+          "num": 14,
+          "title": "The Apache MoE",
+          "question": "What does the main Western open MoE do differently?",
+          "dek": "gpt-oss-120B: 128 experts with 4 active, a 128-token attention window, and MoE under an Apache license.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "15-experts-at-scale",
+          "num": 15,
+          "title": "Experts at scale",
+          "question": "What changes when 384 experts serve 1T parameters?",
+          "dek": "Kimi-K3's 896 routed experts with 16 active, plus one shared: what trillion-parameter routing looks like in the config, and keeping every rank resident.",
+          "minutes": 25,
+          "lab": false
+        }
+      ]
+    },
+    {
+      "id": "linear",
+      "num": "IV",
+      "title": "Beyond attention",
+      "dek": "Attention costs grow with the sequence, so challengers carry a fixed-size state instead: SSMs, delta rules and per-channel decays, hybridized with a little attention.",
+      "chapters": [
+        {
+          "slug": "16-a-state-not-a-cache",
+          "num": 16,
+          "title": "A state, not a cache",
+          "question": "What if the past fit in a fixed-size matrix?",
+          "dek": "Mamba and Mamba-2: selective state spaces, linear-time scans, and constant memory per layer.",
+          "minutes": 30,
+          "lab": true
+        },
+        {
+          "slug": "17-memory-with-a-rule",
+          "num": 17,
+          "title": "Memory with a rule",
+          "question": "How does a recurrent layer rewrite what it remembers?",
+          "dek": "Gated DeltaNet: the delta update plus Mamba-style gating, three linear layers per attention layer.",
+          "minutes": 30,
+          "lab": false
+        },
+        {
+          "slug": "18-decay-per-channel",
+          "num": 18,
+          "title": "A decay per channel",
+          "question": "Why give every feature its own forgetting rate?",
+          "dek": "Kimi-K3 runs Kimi Delta Attention at 2.8T: channel-wise decay beside NoPE MLA layers, with full attention every fourth layer of 93.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "19-seven-linear-one-latent",
+          "num": 19,
+          "title": "Seven linear, one latent",
+          "question": "How far can the recurrent ratio go?",
+          "dek": "MiniMax-M2.5's attention-type list: mostly Lightning attention, periodic MLA, 62 layers deep.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "20-budget-every-state",
+          "num": 20,
+          "title": "Budget every kind of state",
+          "question": "How many bytes does one token leave behind in each architecture?",
+          "dek": "KV, latents, recurrent states and indexer keys per token across the roster, and what 131,072 tokens need on one GPU.",
+          "minutes": 30,
+          "lab": true
+        }
+      ]
+    },
+    {
+      "id": "less",
+      "num": "V",
+      "title": "Predict more, store less",
+      "dek": "Once the block is set, models squeeze more tokens per pass and fewer bytes per weight: multi-token prediction, narrow formats and reasoning as architecture.",
+      "chapters": [
+        {
+          "slug": "21-one-pass-several-tokens",
+          "num": 21,
+          "title": "One pass, several tokens",
+          "question": "Can one forward pass commit to more than one token?",
+          "dek": "Multi-token prediction from DeepSeek-V3 training heads to GLM-5.3 and V4.1-Flash speculate-and-verify layers, and speculative decoding at serve time.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "22-fewer-bits",
+          "num": 22,
+          "title": "Fewer bits",
+          "question": "How narrow can weights get before quality suffers?",
+          "dek": "bf16 baselines, FP8 MoE checkpoints, MXFP4 experts in Kimi-K3: what each format stores and which kernels read it.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "23-context-in-memory",
+          "num": 23,
+          "title": "Context in memory",
+          "question": "What does a full 131,072-token context weigh?",
+          "dek": "State bytes at full context for all fifteen roster models, and which ones fit beside their weights on one H200.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "24-think-then-answer",
+          "num": 24,
+          "title": "Think, then answer",
+          "question": "Where does reasoning live: weights, tokens or training?",
+          "dek": "From o1 to R1: reasoning as post-training with RL, thinking tokens in the context, and what the architecture owes them.",
+          "minutes": 25,
+          "lab": false
+        }
+      ]
+    },
+    {
+      "id": "other",
+      "num": "VI",
+      "title": "Other ways to generate",
+      "dek": "Not everything predicts left to right: diffusion models denoise, multimodal models fuse early, and every design still has to run somewhere.",
+      "chapters": [
+        {
+          "slug": "25-denoise-dont-predict",
+          "num": 25,
+          "title": "Denoise, don't predict",
+          "question": "What if generation refined the whole answer at once?",
+          "dek": "LLaDA's masked diffusion: bidirectional attention, no KV cache, and where the speed-quality knob lives.",
+          "minutes": 30,
+          "lab": true
+        },
+        {
+          "slug": "26-start-from-a-talker",
+          "num": 26,
+          "title": "Start from a talker",
+          "question": "Why initialize a diffusion model from an autoregressive one?",
+          "dek": "Dream-7B's AR initialization and adaptive noise, and the commercial diffusion models that followed.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "27-early-fusion",
+          "num": 27,
+          "title": "Early fusion",
+          "question": "How do pixels become tokens the same stack can read?",
+          "dek": "Natively multimodal models: early fusion in Llama 4, Kimi-K3's and V4.1-Flash's vision towers beside the text stack, and omni speech pipelines.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "28-agents-long-context",
+          "num": 28,
+          "title": "Agents and long contexts",
+          "question": "Which architecture wins a 100,000-token agent loop?",
+          "dek": "Agentic traffic across the roster: prefix reuse, sparse selection and linear state where it matters, with pointers into Two Engines and Two Orchestrators.",
+          "minutes": 25,
+          "lab": false
+        },
+        {
+          "slug": "29-one-engine-every-architecture",
+          "num": 29,
+          "title": "One engine, every architecture",
+          "question": "What does each architecture ask of the engine that serves it?",
+          "dek": "Kernels, expert parallelism and disaggregation per architecture family, and the flags that matter in vLLM and SGLang.",
+          "minutes": 30,
+          "lab": false
+        },
+        {
+          "slug": "30-field-guide",
+          "num": 30,
+          "title": "Field guide",
+          "question": "How do you read a new model release in ten minutes?",
+          "dek": "Config first, code second, paper third: the ten-minute method, the calculators in this course, and how to contribute the next architecture.",
+          "minutes": 20,
+          "lab": false
+        }
+      ]
+    }
+  ]
+}

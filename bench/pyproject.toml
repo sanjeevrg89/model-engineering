@@ -1,0 +1,11 @@
+[project]
+name = "model-engineering-bench"
+version = "0.1.0"
+description = "Arithmetic checks for the Every Model course (recomputed from pinned configs, no GPU)"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["bench"]
+addopts = "-q"

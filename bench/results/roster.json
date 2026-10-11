@@ -1,0 +1,203 @@
+{
+  "machine": {
+    "system": "Darwin",
+    "release": "25.6.0",
+    "machine": "arm64",
+    "processor": "arm"
+  },
+  "python": "3.13.13",
+  "checked": "2026-10-11",
+  "sources": {
+    "hf-transformers": {
+      "repo": "huggingface/transformers",
+      "tag": "v5.9.0",
+      "commit": "0a2757da521a7a49b8143d9e0c938f08747d682e"
+    },
+    "mamba": {
+      "repo": "state-spaces/mamba",
+      "tag": "v2.3.1",
+      "commit": "c5afbdf3bda1a09d68f65181ae3a43ec71079820"
+    },
+    "vllm": {
+      "repo": "vllm-project/vllm",
+      "tag": "v0.30.0",
+      "commit": "ced6857afa0ea7b2e3f0846a62e1394e90f15607"
+    },
+    "sglang": {
+      "repo": "sgl-project/sglang",
+      "tag": "v0.5.21",
+      "commit": "e00930c5489053f26d86b179cee0d087f846acbb"
+    },
+    "qwen25-7b": {
+      "repo": "Qwen/Qwen2.5-7B",
+      "tag": "rev d149729",
+      "commit": "d149729398750b98c0af14eb82c78cfe92750796"
+    },
+    "mistral-7b": {
+      "repo": "mistralai/Mistral-7B-v0.1",
+      "tag": "rev 27d67f1",
+      "commit": "27d67f1b5f57dc0953326b2601d68371d40ea8da"
+    },
+    "mixtral-8x7b": {
+      "repo": "mistralai/Mixtral-8x7B-v0.1",
+      "tag": "rev fc7ac94",
+      "commit": "fc7ac94680e38d7348cfa806e51218e6273104b0"
+    },
+    "dsv2-lite": {
+      "repo": "deepseek-ai/DeepSeek-V2-Lite",
+      "tag": "rev 604d566",
+      "commit": "604d5664dddd88a0433dbae533b7fe9472482de0"
+    },
+    "dsv3": {
+      "repo": "deepseek-ai/DeepSeek-V3",
+      "tag": "rev e815299",
+      "commit": "e815299b0bcbac849fa540c768ef21845365c9eb"
+    },
+    "qwen3-8b": {
+      "repo": "Qwen/Qwen3-8B",
+      "tag": "rev b968826",
+      "commit": "b968826d9c46dd6066d109eabc6255188de91218"
+    },
+    "glm45": {
+      "repo": "zai-org/GLM-4.5",
+      "tag": "rev cbb2c7c",
+      "commit": "cbb2c7cfb52fa128a9660cb1a7a78e017899e115"
+    },
+    "gptoss-120b": {
+      "repo": "openai/gpt-oss-120b",
+      "tag": "rev b5c939d",
+      "commit": "b5c939de8f754692c1647ca79fbf85e8c1e70f8a"
+    },
+    "kimi-k2": {
+      "repo": "moonshotai/Kimi-K2-Instruct",
+      "tag": "rev fd1984e",
+      "commit": "fd1984e2b7a3350dbf7305fe73a4ede25c14de50"
+    },
+    "dsv32-exp": {
+      "repo": "deepseek-ai/DeepSeek-V3.2-Exp",
+      "tag": "rev 194c67e",
+      "commit": "194c67e12b1b0d6df0ef373ddcf215bc84027409"
+    },
+    "llada-8b": {
+      "repo": "GSAI-ML/LLaDA-8B-Base",
+      "tag": "rev 0f2787f",
+      "commit": "0f2787f2d87eac5eed8a087d5ecd24277e6255b2"
+    },
+    "minimax-m25": {
+      "repo": "MiniMaxAI/MiniMax-M2.5",
+      "tag": "rev f710177",
+      "commit": "f710177d938eff80b684d42c5aa84b382612f21f"
+    },
+    "kimi-k3": {
+      "repo": "moonshotai/Kimi-K3",
+      "tag": "rev f831ab6",
+      "commit": "f831ab66814297da540d832a5235f8e904f29d06"
+    },
+    "glm53": {
+      "repo": "zai-org/GLM-5.3",
+      "tag": "rev aca966e",
+      "commit": "aca966e4e02791568aa6a4ced368624b3d897f42"
+    },
+    "dsv41-flash": {
+      "repo": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "tag": "rev 2cba9e4",
+      "commit": "2cba9e42aa026125f3ed06c6d98c1db82f7ca027"
+    }
+  },
+  "command": "uv run --project bench python -m bench.calc --roster",
+  "results": {
+    "models": {
+      "qwen25-7b": {
+        "rev": "d14972939875",
+        "layers": 28,
+        "kv_bytes_per_token_bf16": 57344,
+        "mla_latent_bytes_per_token_bf16": null
+      },
+      "mistral-7b": {
+        "rev": "27d67f1b5f57",
+        "layers": 32,
+        "kv_bytes_per_token_bf16": 131072,
+        "mla_latent_bytes_per_token_bf16": null
+      },
+      "mixtral-8x7b": {
+        "rev": "fc7ac94680e3",
+        "layers": 32,
+        "kv_bytes_per_token_bf16": 131072,
+        "mla_latent_bytes_per_token_bf16": null
+      },
+      "dsv2-lite": {
+        "rev": "604d5664dddd",
+        "layers": 27,
+        "kv_bytes_per_token_bf16": null,
+        "mla_latent_bytes_per_token_bf16": 31104
+      },
+      "dsv3": {
+        "rev": "e815299b0bcb",
+        "layers": 61,
+        "kv_bytes_per_token_bf16": null,
+        "mla_latent_bytes_per_token_bf16": 70272
+      },
+      "qwen3-8b": {
+        "rev": "b968826d9c46",
+        "layers": 36,
+        "kv_bytes_per_token_bf16": 147456,
+        "mla_latent_bytes_per_token_bf16": null
+      },
+      "glm45": {
+        "rev": "cbb2c7cfb52f",
+        "layers": 92,
+        "kv_bytes_per_token_bf16": 376832,
+        "mla_latent_bytes_per_token_bf16": null
+      },
+      "gptoss-120b": {
+        "rev": "b5c939de8f75",
+        "layers": 36,
+        "kv_bytes_per_token_bf16": 73728,
+        "mla_latent_bytes_per_token_bf16": null
+      },
+      "kimi-k2": {
+        "rev": "fd1984e2b7a3",
+        "layers": 61,
+        "kv_bytes_per_token_bf16": null,
+        "mla_latent_bytes_per_token_bf16": 70272
+      },
+      "dsv32-exp": {
+        "rev": "194c67e12b1b",
+        "layers": 61,
+        "kv_bytes_per_token_bf16": null,
+        "mla_latent_bytes_per_token_bf16": 70272
+      },
+      "llada-8b": {
+        "rev": "0f2787f2d87e",
+        "layers": 32,
+        "kv_bytes_per_token_bf16": null,
+        "mla_latent_bytes_per_token_bf16": null
+      },
+      "minimax-m25": {
+        "rev": "f710177d938e",
+        "layers": 62,
+        "kv_bytes_per_token_bf16": null,
+        "mla_latent_bytes_per_token_bf16": null
+      },
+      "kimi-k3": {
+        "rev": "f831ab668142",
+        "layers": 93,
+        "kv_bytes_per_token_bf16": null,
+        "mla_latent_bytes_per_token_bf16": 27648
+      },
+      "glm53": {
+        "rev": "aca966e4e027",
+        "layers": 78,
+        "kv_bytes_per_token_bf16": null,
+        "mla_latent_bytes_per_token_bf16": 89856
+      },
+      "dsv41-flash": {
+        "rev": "2cba9e42aa02",
+        "layers": 40,
+        "kv_bytes_per_token_bf16": null,
+        "mla_latent_bytes_per_token_bf16": null
+      }
+    },
+    "method": "integer arithmetic over .cache configs; null where the formula does not apply (MLA/hybrid/diffusion)"
+  }
+}

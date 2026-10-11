@@ -1,0 +1,147 @@
+<div class="landing">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero__text">
+        <span class="label">Every architecture since ChatGPT · {{count}} chapters</span>
+        <h1 class="hero__title"><span class="row">Every</span><span class="row">Model</span></h1>
+        <p class="hero__thesis">How <b class="eng-a">every important model architecture since ChatGPT</b> works, from the LLaMA recipe through GQA, MoE, MLA, hybrids, sparse attention and diffusion. Each chapter runs the same workload through an incumbent and a challenger, step by step, and pins every claim to the source.</p>
+        <p class="hero__resume">Fifteen open-weight configs carry the course, from Mistral-7B (2023) to Kimi-K3, GLM-5.3 and DeepSeek-V4.1-Flash (2026). Gated flagships appear as cited deltas until their configs are publicly fetchable. Start with the <a href="timeline/">timeline</a> or chapter 1.</p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="{{first}}">Start with chapter 1</a>
+          <a class="btn" href="#map">See all {{count}} chapters</a>
+        </div>
+        <p class="hero__resume" data-resume hidden>Pick up where you left off: <a href="#"><span data-resume-title></span></a></p>
+        <rev-block></rev-block>
+      </div>
+      <div class="hero__scope">
+        <figure id="hero-scope" class="scope--compact"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="method">
+    <div class="wrap">
+      <div class="method__intro">
+        <h2>Every chapter works the same way</h2>
+        <p>Watch two designs run, then build a small version of the mechanism yourself, then read the configs and code behind it. You need Python and a rough idea of what a transformer does. You don't need a GPU.</p>
+      </div>
+      <div class="method__grid">
+        <div class="method__item">
+          <div class="method__art" aria-hidden="true">
+            <svg viewBox="0 0 300 92" preserveAspectRatio="none">
+              <rect x="0" y="0" width="300" height="92" style="fill: var(--panel)"/>
+              <path d="M14 30h40l6-12h34l6 12h60l6-12h22l6 12h96" style="fill:none; stroke: var(--a); stroke-width: 2"/>
+              <path d="M14 66h70l6 12h22l6-12h40l6 12h50l6-12h66" style="fill:none; stroke: var(--b); stroke-width: 2"/>
+              <line x1="150" y1="8" x2="150" y2="86" style="stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 3 3"/>
+              <text x="156" y="52" style="font: 600 11px var(--f-mono); fill: var(--ink)">Δ</text>
+            </svg>
+          </div>
+          <h3>See it</h3>
+          <p>A step-through figure runs one workload through the incumbent design on channel A and the challenger on channel B, on a single shared clock. A marked step shows where the two designs compute something different, and why.</p>
+        </div>
+        <div class="method__item">
+          <div class="method__art" aria-hidden="true">
+            <svg viewBox="0 0 300 92" preserveAspectRatio="none">
+              <rect x="0" y="0" width="300" height="92" style="fill: var(--panel)"/>
+              <text x="16" y="26" style="font: 11px var(--f-mono); fill: var(--ink-3)">def</text>
+              <text x="44" y="26" style="font: 600 11px var(--f-mono); fill: var(--ink)">kv_bytes(config):</text>
+              <text x="32" y="44" style="font: 11px var(--f-mono); fill: var(--ink-2)">heads = []</text>
+              <text x="32" y="62" style="font: 11px var(--f-mono); fill: var(--ink-2)">for h in heads: …</text>
+              <text x="196" y="26" style="font: 600 11px var(--f-mono); fill: var(--good)">✓ 6/6 pass</text>
+              <rect x="190" y="40" width="94" height="6" rx="3" style="fill: var(--good)"/>
+            </svg>
+          </div>
+          <h3>Build it</h3>
+          <p>Short Python labs run in your browser or locally with pytest. They use a tiny transformer and fixture configs from the pinned revisions, so the tests check real shapes: head counts, cache bytes, active experts.</p>
+        </div>
+        <div class="method__item">
+          <div class="method__art" aria-hidden="true">
+            <svg viewBox="0 0 300 92" preserveAspectRatio="none">
+              <rect x="0" y="0" width="300" height="92" style="fill: var(--panel)"/>
+              <rect x="14" y="18" width="16" height="16" rx="3" style="fill: var(--a)"/>
+              <text x="22" y="30" text-anchor="middle" style="font: 800 10px var(--f-display); fill: var(--panel)">A</text>
+              <text x="38" y="30" style="font: 11px var(--f-mono); fill: var(--ink)">qwen25-7b/config.json</text>
+              <rect x="14" y="54" width="16" height="16" rx="3" style="fill: var(--b)"/>
+              <text x="22" y="66" text-anchor="middle" style="font: 800 10px var(--f-display); fill: var(--panel)">B</text>
+              <text x="38" y="66" style="font: 11px var(--f-mono); fill: var(--ink)">modeling_mixtral.py</text>
+            </svg>
+          </div>
+          <h3>Read it</h3>
+          <p>Every config key, class and line number links to the revision this course is pinned to. The build checks each reference against that exact commit, so the links stay correct as the projects move on.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="map" id="map">
+    <div class="wrap">
+      <header class="map__head">
+        <h2>The course</h2>
+        <p>Six parts, from the decoder block everyone inherited to diffusion. Each chapter ends on a question, and the next chapter answers it. By the end, every architecture should look like the obvious answer to a problem you've already met.</p>
+      </header>
+      <course-map></course-map>
+    </div>
+  </section>
+
+  <section class="pinned">
+    <div class="wrap">
+      <div>
+        <span class="label">Pinned to source</span>
+        <h2>Line numbers that stay correct</h2>
+        <p>Guides to model architectures go stale in months. A config key is renamed, a default changes, and the guide is wrong without anyone noticing. This course is pinned to one release of Transformers and one revision of each roster config. The build reads them at those pins and refuses to publish a reference that no longer points at what the text says it does.</p>
+        <p>A drift check runs every week, and a new edition ships every eight weeks: newly released architectures arrive as cited deltas first and join the pinned roster when their configs are publicly fetchable. <a href="method/">How this course is checked</a></p>
+      </div>
+      <div class="ledger">
+        <table>
+          <thead><tr><th>Source</th><th>Release</th><th>Commit</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge--x">H</span>Transformers</td><td>{{hf-transformers.tag}}</td><td>{{hf-transformers.short}}</td></tr>
+            <tr><td><span class="badge badge--x">Q</span>Qwen2.5-7B</td><td>Hugging Face</td><td>{{qwen25-7b.short}}</td></tr>
+            <tr><td><span class="badge badge--x">W</span>Mistral-7B-v0.1</td><td>Hugging Face</td><td>{{mistral-7b.short}}</td></tr>
+            <tr><td><span class="badge badge--x">X</span>Mixtral-8x7B-v0.1</td><td>Hugging Face</td><td>{{mixtral-8x7b.short}}</td></tr>
+            <tr><td><span class="badge badge--x">D</span>DeepSeek-V3</td><td>Hugging Face</td><td>{{dsv3.short}}</td></tr>
+            <tr><td><span class="badge badge--x">D</span>DeepSeek-V3.2-Exp</td><td>Hugging Face</td><td>{{dsv32-exp.short}}</td></tr>
+            <tr><td><span class="badge badge--x">K</span>Kimi-K2-Instruct</td><td>Hugging Face</td><td>{{kimi-k2.short}}</td></tr>
+            <tr><td><span class="badge badge--x">L</span>LLaDA-8B-Base</td><td>Hugging Face</td><td>{{llada-8b.short}}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="others" id="other-courses">
+    <div class="wrap">
+      <span class="label">Other courses</span>
+      <h2>Where else to learn this</h2>
+      <div class="others__list">
+        <article>
+          <h3><a href="https://vllm-sglang-course.behindthetoken.workers.dev/" target="_blank" rel="noopener">Two Engines</a></h3>
+          <p>The sibling course: vLLM and SGLang side by side, from one token on one H200 to a GB300 rack. Read it when you want to know what happens inside the engine that serves the architectures taught here.</p>
+        </article>
+        <article>
+          <h3><a href="https://dynamo-llmd-course.behindthetoken.workers.dev/" target="_blank" rel="noopener">Two Orchestrators</a></h3>
+          <p>The other sibling: NVIDIA Dynamo and llm-d serving frontier models across thousands of GPUs. Read it when one model needs a fleet.</p>
+        </article>
+        <article>
+          <h3><a href="https://sebastianraschka.com/llm-architecture-gallery/" target="_blank" rel="noopener">LLM Architecture Gallery</a></h3>
+          <p>Sebastian Raschka's visual reference for modern architectures: layer mixes, KV bytes per token and what changed release to release. The fastest way to check a claim in this course against an independent source.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <footer class="landing-foot">
+    <div class="wrap">
+      <span>Every Model · checked {{checked}}</span>
+      <span>Model configs belong to their publishers. This course is independent and not affiliated with any provider.</span>
+      <span>Text <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license">CC BY 4.0</a> · code Apache-2.0</span>
+      <a href="timeline/">Timeline</a>
+      <a href="compare/">Every spec sheet at a glance</a>
+      <a href="glossary/">Glossary</a>
+      <a href="hardware/">Hardware</a>
+      <a href="capstones/">GPU capstones</a>
+      <a href="contribute/">From reader to contributor</a>
+      <a href="method/">How this course is checked</a>
+    </div>
+  </footer>
+</div>

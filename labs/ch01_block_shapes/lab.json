@@ -1,0 +1,16 @@
+{
+  "id": "ch01",
+  "dir": "ch01_block_shapes",
+  "kicker": "Chapter 1",
+  "title": "Weigh one decoder block",
+  "file": "block_shapes.py",
+  "test": "test_block_shapes.py",
+  "solution": "solution/block_shapes.py",
+  "support": [],
+  "local": "uv run pytest labs/ch01_block_shapes",
+  "hints": [
+    "KV cache holds a key <em>and</em> a value per head per layer: the leading factor is 2, then layers, heads, width, bytes.",
+    "Q and O use the query-head count; K and V use the KV-head count. The MLP is three matrices: gate, up, down.",
+    "An MoE token pays full attention plus only its active experts — two of eight for Mixtral, not eight."
+  ]
+}

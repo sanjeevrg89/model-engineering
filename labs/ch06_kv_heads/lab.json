@@ -1,0 +1,16 @@
+{
+  "id": "ch06",
+  "dir": "ch06_kv_heads",
+  "kicker": "Chapter 6",
+  "title": "Price the KV cache",
+  "file": "kv_heads.py",
+  "test": "test_kv_heads.py",
+  "solution": "solution/kv_heads.py",
+  "support": [],
+  "local": "uv run pytest labs/ch06_kv_heads",
+  "hints": [
+    "The repeat factor is a division: query heads over KV heads. Qwen2.5-7B gives 7, V4.1-Flash gives 64.",
+    "KV bytes need the factor of 2 for keys <em>and</em> values, then layers, heads, width, byte width.",
+    "A full context is one multiplication away — but check the window first: gpt-oss never multiplies past 128."
+  ]
+}

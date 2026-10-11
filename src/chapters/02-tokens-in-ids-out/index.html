@@ -1,0 +1,18 @@
+<p>Mistral-7B gets by with 32,000 words while gpt-oss-120B needs 201,088. This chapter weighs vocabularies across the roster: what the embedding tables cost, why nothing is tied anymore, and what the LM head reads every step.</p>
+
+<h2 id="outline"><span class="h-num">2.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>Vocabulary sizes from 32,000 to 201,088 and the two embedding matrices each one pays for.</li>
+  <li>Why <code>tie_word_embeddings: false</code> holds everywhere, and what tying would save.</li>
+  <li>The LM head's per-step read: one hidden vector times the full vocabulary matrix.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2023">2023 timeline</a> shows where open vocabularies settled, and chapter 1's numbers strip has the two endpoint sizes.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Vocabulary size sets the width of the model's last layer and is paid twice, untied, in every roster model.</li>
+  </ul>
+</div>

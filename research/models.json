@@ -1,0 +1,393 @@
+{
+  "_note": "Derived by hand from the pinned configs in .cache/src/models/<key>/config.json. kv_bytes_per_token_bf16 is the standard 2*K+V formula and is null where it does not apply (MLA caches a latent, diffusion caches nothing, hybrids cache only on some layers). MLA rows give latent bytes instead: (kv_lora_rank + qk_rope_head_dim) * 2 bytes per layer. Frontier-tier totals and active counts marked cited_third_party come from the Artificial Analysis charts and model cards (Oct 2026), not from configs.",
+  "qwen25-7b": {
+    "hidden": 3584,
+    "layers": 28,
+    "heads": 28,
+    "kv_heads": 4,
+    "head_dim": 128,
+    "intermediate": 18944,
+    "vocab": 152064,
+    "rope_theta": 1000000.0,
+    "sliding_window": 131072,
+    "max_pos": 131072,
+    "kv_bytes_per_token_bf16": 57344,
+    "kv_method": "2*28*4*128*2B"
+  },
+  "mistral-7b": {
+    "hidden": 4096,
+    "layers": 32,
+    "heads": 32,
+    "kv_heads": 8,
+    "head_dim": 128,
+    "intermediate": 14336,
+    "vocab": 32000,
+    "rope_theta": 10000.0,
+    "sliding_window": 4096,
+    "max_pos": 32768,
+    "kv_bytes_per_token_bf16": 131072,
+    "kv_method": "2*32*8*128*2B"
+  },
+  "mixtral-8x7b": {
+    "hidden": 4096,
+    "layers": 32,
+    "heads": 32,
+    "kv_heads": 8,
+    "head_dim": 128,
+    "intermediate": 14336,
+    "vocab": 32000,
+    "rope_theta": 1000000.0,
+    "sliding_window": null,
+    "max_pos": 32768,
+    "kv_bytes_per_token_bf16": 131072,
+    "kv_method": "2*32*8*128*2B",
+    "moe": {
+      "num_local_experts": 8,
+      "num_experts_per_tok": 2
+    }
+  },
+  "dsv2-lite": {
+    "hidden": 2048,
+    "layers": 27,
+    "heads": 16,
+    "kv_heads": 16,
+    "intermediate": 10944,
+    "vocab": 102400,
+    "rope_theta": 10000,
+    "sliding_window": null,
+    "max_pos": 163840,
+    "kv_bytes_per_token_bf16": null,
+    "kv_method": "MLA: no per-head KV cache",
+    "mla_latent_bytes_per_token_bf16": 31104,
+    "mla_method": "(512+64)*2B*27 layers",
+    "moe": {
+      "n_routed_experts": 64,
+      "num_experts_per_tok": 6,
+      "moe_intermediate_size": 1408,
+      "first_k_dense_replace": 1
+    },
+    "mla": {
+      "kv_lora_rank": 512,
+      "qk_nope_head_dim": 128,
+      "qk_rope_head_dim": 64,
+      "v_head_dim": 128
+    }
+  },
+  "dsv3": {
+    "hidden": 7168,
+    "layers": 61,
+    "heads": 128,
+    "kv_heads": 128,
+    "intermediate": 18432,
+    "vocab": 129280,
+    "rope_theta": 10000,
+    "sliding_window": null,
+    "max_pos": 163840,
+    "kv_bytes_per_token_bf16": null,
+    "kv_method": "MLA: no per-head KV cache",
+    "mla_latent_bytes_per_token_bf16": 70272,
+    "mla_method": "(512+64)*2B*61 layers",
+    "moe": {
+      "n_routed_experts": 256,
+      "num_experts_per_tok": 8,
+      "moe_intermediate_size": 2048,
+      "first_k_dense_replace": 3
+    },
+    "mla": {
+      "kv_lora_rank": 512,
+      "q_lora_rank": 1536,
+      "qk_nope_head_dim": 128,
+      "qk_rope_head_dim": 64,
+      "v_head_dim": 128
+    }
+  },
+  "qwen3-8b": {
+    "hidden": 4096,
+    "layers": 36,
+    "heads": 32,
+    "kv_heads": 8,
+    "head_dim": 128,
+    "intermediate": 12288,
+    "vocab": 151936,
+    "rope_theta": 1000000,
+    "sliding_window": null,
+    "max_pos": 40960,
+    "kv_bytes_per_token_bf16": 147456,
+    "kv_method": "2*36*8*128*2B"
+  },
+  "glm45": {
+    "hidden": 5120,
+    "layers": 92,
+    "heads": 96,
+    "kv_heads": 8,
+    "head_dim": 128,
+    "intermediate": 12288,
+    "vocab": 151552,
+    "rope_theta": 1000000,
+    "sliding_window": null,
+    "max_pos": 131072,
+    "kv_bytes_per_token_bf16": 376832,
+    "kv_method": "2*92*8*128*2B",
+    "moe": {
+      "n_routed_experts": 160,
+      "num_experts_per_tok": 8,
+      "moe_intermediate_size": 1536,
+      "first_k_dense_replace": 3
+    }
+  },
+  "gptoss-120b": {
+    "hidden": 2880,
+    "layers": 36,
+    "heads": 64,
+    "kv_heads": 8,
+    "head_dim": 64,
+    "intermediate": 2880,
+    "vocab": 201088,
+    "rope_theta": 150000,
+    "sliding_window": 128,
+    "max_pos": 131072,
+    "kv_bytes_per_token_bf16": 73728,
+    "kv_method": "2*36*8*64*2B",
+    "moe": {
+      "num_local_experts": 128,
+      "num_experts_per_tok": 4
+    }
+  },
+  "kimi-k2": {
+    "hidden": 7168,
+    "layers": 61,
+    "heads": 64,
+    "kv_heads": 64,
+    "intermediate": 18432,
+    "vocab": 163840,
+    "rope_theta": 50000.0,
+    "sliding_window": null,
+    "max_pos": 131072,
+    "kv_bytes_per_token_bf16": null,
+    "kv_method": "MLA: no per-head KV cache",
+    "mla_latent_bytes_per_token_bf16": 70272,
+    "mla_method": "(512+64)*2B*61 layers",
+    "moe": {
+      "n_routed_experts": 384,
+      "num_experts_per_tok": 8,
+      "moe_intermediate_size": 2048,
+      "first_k_dense_replace": 1
+    },
+    "mla": {
+      "kv_lora_rank": 512,
+      "q_lora_rank": 1536,
+      "qk_nope_head_dim": 128,
+      "qk_rope_head_dim": 64,
+      "v_head_dim": 128
+    }
+  },
+  "dsv32-exp": {
+    "hidden": 7168,
+    "layers": 61,
+    "heads": 128,
+    "kv_heads": 128,
+    "intermediate": 18432,
+    "vocab": 129280,
+    "rope_theta": 10000,
+    "sliding_window": null,
+    "max_pos": 163840,
+    "kv_bytes_per_token_bf16": null,
+    "kv_method": "MLA+DSA: latent plus indexer keys; attention reads only index_topk 2,048 positions",
+    "mla_latent_bytes_per_token_bf16": 70272,
+    "mla_method": "(512+64)*2B*61 layers",
+    "sparse": {
+      "index_topk": 2048,
+      "norm_topk_prob": true
+    },
+    "moe": {
+      "n_routed_experts": 256,
+      "num_experts_per_tok": 8,
+      "moe_intermediate_size": 2048,
+      "first_k_dense_replace": 3
+    },
+    "mla": {
+      "kv_lora_rank": 512,
+      "q_lora_rank": 1536,
+      "qk_nope_head_dim": 128,
+      "qk_rope_head_dim": 64,
+      "v_head_dim": 128
+    }
+  },
+  "llada-8b": {
+    "hidden": 4096,
+    "layers": 32,
+    "heads": 32,
+    "kv_heads": 32,
+    "head_dim": 128,
+    "intermediate": null,
+    "vocab": 126464,
+    "rope_theta": 500000.0,
+    "sliding_window": null,
+    "max_pos": null,
+    "kv_bytes_per_token_bf16": null,
+    "kv_method": "diffusion with bidirectional attention: no KV cache to reuse",
+    "diffusion": {
+      "block_type": "llama",
+      "d_model": 4096,
+      "n_layers": 32,
+      "n_heads": 32,
+      "n_kv_heads": 32
+    }
+  },
+  "minimax-m25": {
+    "hidden": 3072,
+    "layers": 62,
+    "heads": 48,
+    "kv_heads": 8,
+    "head_dim": 128,
+    "intermediate": 1536,
+    "vocab": 200064,
+    "rope_theta": 5000000,
+    "sliding_window": null,
+    "max_pos": 196608,
+    "kv_bytes_per_token_bf16": null,
+    "kv_method": "hybrid: only MLA layers in attn_type_list keep a growing cache; Lightning layers keep fixed state",
+    "hybrid": {
+      "attn_type_list_len": 62,
+      "note": "per-layer attention types in config.json attn_type_list"
+    },
+    "moe": {
+      "num_local_experts": 256,
+      "num_experts_per_tok": 8
+    }
+  },
+  "kimi-k3": {
+    "hidden": 7168,
+    "layers": 93,
+    "heads": 96,
+    "kv_heads": 96,
+    "intermediate": 33792,
+    "vocab": 163840,
+    "rope_theta": null,
+    "sliding_window": null,
+    "max_pos": 1048576,
+    "kv_bytes_per_token_bf16": null,
+    "kv_method": "KDA hybrid: 24 full MLA layers keep a latent cache; 69 KDA layers keep fixed recurrent state",
+    "mla_latent_bytes_per_token_bf16": 27648,
+    "mla_method": "(512+64)*2B*24 full-attn layers (full_attn_layers list)",
+    "hybrid": {
+      "full_attn_layers_count": 24,
+      "linear_layers_count": 69,
+      "note": "every 4th layer full MLA (4..92) plus 93; rest Kimi Delta Attention"
+    },
+    "moe": {
+      "num_experts": 896,
+      "num_experts_per_token": 16,
+      "num_shared_experts": 2,
+      "first_k_dense_replace": 1,
+      "moe_intermediate_size": 3072
+    },
+    "mla": {
+      "kv_lora_rank": 512,
+      "q_lora_rank": 1536,
+      "qk_nope_head_dim": 128,
+      "qk_rope_head_dim": 64,
+      "v_head_dim": 128,
+      "mla_use_nope": true
+    },
+    "quant": "MXFP4 experts (quantization_config in text_config)",
+    "cited_third_party": {
+      "total_params": "2.8T",
+      "active_params": "104B",
+      "source": "Artificial Analysis charts, Oct 2026"
+    }
+  },
+  "glm53": {
+    "hidden": 6144,
+    "layers": 78,
+    "heads": 64,
+    "kv_heads": 64,
+    "head_dim": 192,
+    "intermediate": 12288,
+    "vocab": 154880,
+    "rope_theta": 8000000,
+    "sliding_window": null,
+    "max_pos": 1048576,
+    "kv_bytes_per_token_bf16": null,
+    "kv_method": "MLA+DSA: latent plus indexer keys; attention reads only index_topk 2,048 positions",
+    "mla_latent_bytes_per_token_bf16": 89856,
+    "mla_method": "(512+64)*2B*78 layers",
+    "sparse": {
+      "index_topk": 2048,
+      "index_head_dim": 128,
+      "index_n_heads": 32,
+      "norm_topk_prob": true
+    },
+    "moe": {
+      "n_routed_experts": 256,
+      "n_shared_experts": 1,
+      "num_experts_per_tok": 8,
+      "moe_intermediate_size": 2048,
+      "first_k_dense_replace": 3,
+      "num_nextn_predict_layers": 1
+    },
+    "mla": {
+      "kv_lora_rank": 512,
+      "q_lora_rank": 2048,
+      "qk_head_dim": 256,
+      "qk_nope_head_dim": 192,
+      "qk_rope_head_dim": 64,
+      "v_head_dim": 256
+    },
+    "quant": "FP8 dynamic (quantization_config e4m3)",
+    "cited_third_party": {
+      "total_params": "753B",
+      "active_params": "40B",
+      "source": "Artificial Analysis charts, Oct 2026"
+    }
+  },
+  "dsv41-flash": {
+    "hidden": 5120,
+    "layers": 40,
+    "heads": 64,
+    "kv_heads": 1,
+    "head_dim": 512,
+    "vocab": 129280,
+    "rope_theta": 10000,
+    "sliding_window": 128,
+    "max_pos": 1048576,
+    "multimodal": true,
+    "kv_bytes_per_token_bf16": null,
+    "kv_method": "compressed: 4 kv_source layers (2,8,14,20) hold full context; other layers read those; window store beside; see ch21/22",
+    "sparse": {
+      "index_topk": 512,
+      "index_head_dim": 128,
+      "index_n_heads": 32,
+      "candidate_topk_blocks": 2048,
+      "candidate_block_size": 8
+    },
+    "moe": {
+      "n_routed_experts": 384,
+      "n_shared_experts": 1,
+      "num_experts_per_tok": 6,
+      "moe_intermediate_size": 2304,
+      "num_nextn_predict_layers": 3
+    },
+    "latent": {
+      "q_lora_rank": 1280,
+      "o_lora_rank": 1024,
+      "qk_rope_head_dim": 64
+    },
+    "speculative": {
+      "dspark_block_size": 5,
+      "dspark_n_routed_experts": 128,
+      "dspark_num_experts_per_tok": 3,
+      "dspark_target_layer_ids": [
+        37,
+        38,
+        39
+      ]
+    },
+    "quant": "FP8 dynamic (quant_method fp8)",
+    "cited_third_party": {
+      "total_params": "552B",
+      "active_params": "8B prefill / 16B decode",
+      "source": "Artificial Analysis charts + release notes, Oct 2026"
+    }
+  }
+}

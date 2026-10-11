@@ -1,0 +1,126 @@
+<p>Mixtral woke 2 of 8 big experts. DeepSeek-V3 wakes 8 of 256 small ones, routes them in groups, and keeps one shared expert on for every token. This chapter runs Mixtral's coarse block against V3's fine-grained one: smaller experts, group-constrained routing, and the first 3 layers left dense.</p>
+
+<h2 id="fine"><span class="h-num">12.1</span>Two hundred fifty-six small experts</h2>
+
+<figure id="fig-12-1"></figure>
+
+<p>The config states the scale: 256 routed experts <ref e="dsv3" p="config.json" l="26" s="n_routed_experts"></ref>, 8 active per token <ref e="dsv3" p="config.json" l="30" s="num_experts_per_tok"></ref>, each with an intermediate width of 2,048 <ref e="dsv3" p="config.json" l="23" s="moe_intermediate_size"></ref> against a hidden width of 7,168 <ref e="dsv3" p="config.json" l="17" s="hidden_size"></ref>. One expert holds 3 × 7,168 × 2,048 ≈ 44.0M weights — one quarter of a Mixtral expert — and a token visits eight plus one shared: about 396.4M of MLP per MoE layer. Routing 256 experts needs constraint, so V3 groups them in 8 and picks across at most 4 groups <ref e="dsv3" p="config.json" l="25" s="n_group"></ref> <ref e="dsv3" p="config.json" l="60" s="topk_group"></ref>, with auxiliary-loss-free balancing <ref e="dsv3" p="config.json" l="61" s="topk_method"></ref>.</p>
+
+<excerpt e="dsv3" p="config.json" l="25-31" hl="25,26,30" s="n_routed_experts" title="DeepSeek-V3: 256 experts in 8 groups, top-8"></excerpt>
+
+<h2 id="shared"><span class="h-num">12.2</span>The shared expert beside them</h2>
+
+<p>Beside the 256 routed experts sits one shared expert that every token passes through <ref e="dsv3" p="config.json" l="27" s="n_shared_experts"></ref>. The module builds it as a dense MLP sized by the shared count, routes tokens to the picked experts, and adds both paths:</p>
+
+<excerpt e="hf-transformers" p="src/transformers/models/deepseek_v3/modeling_deepseek_v3.py" l="194-215" hl="204,208,213" s="shared_experts" title="DeepSeek-V3: shared experts beside 256 routed"></excerpt>
+
+<p>The router itself only emits logits <ref e="hf-transformers" p="src/transformers/models/deepseek_v3/modeling_deepseek_v3.py" l="139" s="DeepseekV3TopkRouter"></ref>; grouping, sigmoid scoring <ref e="dsv3" p="config.json" l="58" s="scoring_func"></ref> and the 2.5 scaling factor <ref e="dsv3" p="config.json" l="57" s="routed_scaling_factor"></ref> shape the picks downstream. Kimi-K2 keeps the shared expert and the no-auxiliary-loss routing but drops the groups to 1 <ref e="kimi-k2" p="config.json" l="25" s="n_group"></ref> <ref e="kimi-k2" p="config.json" l="62" s="topk_group"></ref> — 384 experts picked flat. V2-Lite, the earlier design, runs 2 shared experts with plain greedy softmax routing <ref e="dsv2-lite" p="config.json" l="27" s="n_shared_experts"></ref> <ref e="dsv2-lite" p="config.json" l="53" s="topk_method"></ref>.</p>
+
+<div class="numbers">
+  <div><span class="v">44.0<small>M</small></span><span class="d">weights per V3 expert: 3 × 7,168 × 2,048</span></div>
+  <div><span class="v">396.4<small>M</small></span><span class="d">active MLP per V3 MoE layer: 8 routed + 1 shared</span></div>
+  <div><span class="v">3 / 61</span><span class="d">first layers left dense, for stability</span></div>
+  <div><span class="v">8 / 256</span><span class="d">routed experts awake per token: 3.1%</span></div>
+</div>
+
+<h2 id="dense-first"><span class="h-num">12.3</span>Dense first, then route</h2>
+
+<p>The first 3 of 61 layers are dense <ref e="dsv3" p="config.json" l="15" s="first_k_dense_replace"></ref> <ref e="dsv3" p="config.json" l="31" s="num_hidden_layers"></ref>: every token passes through full feed-forwards before any routing happens. Early layers learn the general representations every later expert builds on, and dense layers can't collapse into imbalance. GLM-4.5 makes the same call at 3 of 92 <ref e="glm45" p="config.json" l="30" s="first_k_dense_replace"></ref> <ref e="glm45" p="config.json" l="31" s="num_hidden_layers"></ref>; Kimi-K3 at 1 of 93. The fraction shrinks as the model grows, but no flagship routes from layer zero.</p>
+
+<div class="sheet wide"><table>
+  <caption><span class="label">Spec sheet 12.1</span>Coarse against fine-grained MoE</caption>
+  <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>Mixtral-8x7B-v0.1</th><th class="chb"><span class="badge badge--b">B</span>DeepSeek-V3</th></tr></thead>
+  <tbody>
+    <tr><th>Routed experts / active</th><td>8 / 2 <ref e="mixtral-8x7b" p="config.json" l="18" s="num_local_experts"></ref> <ref e="mixtral-8x7b" p="config.json" l="15" s="num_experts_per_tok"></ref></td><td>256 / 8 <ref e="dsv3" p="config.json" l="26" s="n_routed_experts"></ref> <ref e="dsv3" p="config.json" l="30" s="num_experts_per_tok"></ref></td></tr>
+    <tr><th>Shared experts</th><td>none</td><td>1 <ref e="dsv3" p="config.json" l="27" s="n_shared_experts"></ref></td></tr>
+    <tr><th>Expert width</th><td>176.2M each</td><td>44.0M each</td></tr>
+    <tr><th>Routing constraint</th><td>flat top-2, renormalize</td><td>8 groups, ≤4; no aux loss <ref e="dsv3" p="config.json" l="25" s="n_group"></ref> <ref e="dsv3" p="config.json" l="61" s="topk_method"></ref></td></tr>
+    <tr><th>Scoring</th><td>softmax</td><td>sigmoid × 2.5 <ref e="dsv3" p="config.json" l="58" s="scoring_func"></ref> <ref e="dsv3" p="config.json" l="57" s="routed_scaling_factor"></ref></td></tr>
+    <tr><th>Dense-first layers</th><td>0</td><td>3 of 61 <ref e="dsv3" p="config.json" l="15" s="first_k_dense_replace"></ref></td></tr>
+    <tr><th>Active MLP per layer</th><td>352.3M</td><td>396.4M</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="lab"><span class="h-num">12.4</span>Build it</h2>
+
+<section class="lab" data-lab="../../labs/ch12_active_params/lab.json" id="lab-12">
+  <div class="lab__brief">
+    <p>Write three functions over the pinned configs: active MLP weights per MoE layer with and without a shared expert, the dense-first fraction, and the awake share of experts. The tests check Mixtral, V3, Kimi-K2 and V2-Lite's two shared experts, and catch counting the shared expert as routed.</p>
+  </div>
+</section>
+
+<h2 id="read"><span class="h-num">12.5</span>Read the real code</h2>
+
+<p>One router, one MoE module, one config stanza of groups. Then compare Kimi-K2's flattened groups.</p>
+
+<div class="reading">
+  <section class="reading--a">
+    <h4><span class="badge badge--a">A</span>Mixtral-8x7B-v0.1</h4>
+    <ol>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/mixtral/modeling_mixtral.py" l="119" s="MixtralSparseMoeBlock">mixtral/modeling_mixtral.py: the block</ref><span>Gate, run two, reshape — the coarse baseline chapter 11 opened.</span></div></li>
+    </ol>
+  </section>
+  <section class="reading--b">
+    <h4><span class="badge badge--b">B</span>DeepSeek-V3</h4>
+    <ol>
+      <li><div><ref e="dsv3" p="config.json" l="26" s="n_routed_experts">config.json: groups and counts</ref><span>Lines 25–31 hold groups, experts, top-k and dense-first in one place.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/deepseek_v3/modeling_deepseek_v3.py" l="139" s="DeepseekV3TopkRouter">deepseek_v3/modeling_deepseek_v3.py: the router</ref><span>Logits only; grouping and scaling happen downstream.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/deepseek_v3/modeling_deepseek_v3.py" l="194" s="DeepseekV3MoE">deepseek_v3/modeling_deepseek_v3.py: the module</ref><span>Shared experts sized by count beside the routed pool.</span></div></li>
+    </ol>
+  </section>
+</div>
+
+<h2 id="check"><span class="h-num">12.6</span>Check yourself</h2>
+
+<div class="quiz">
+  <div class="q" data-answer="b">
+    <p class="q__stem">About how many MLP weights does one DeepSeek-V3 token activate per MoE layer?</p>
+    <ol class="q__opts">
+      <li data-k="a">44.0M — one expert</li>
+      <li data-k="b">396.4M — 8 routed plus 1 shared expert of 44.0M each</li>
+      <li data-k="c">1.4B — all 256 routed experts at reduced strength</li>
+      <li data-k="d">352.3M — the Mixtral number</li>
+    </ol>
+    <div class="q__why">9 × 3 × 7,168 × 2,048 = 396,361,728. Near Mixtral's 394.3M per layer — the finer design spends the same per token and buys 32x the expert count.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">What do V3's 8 groups with at most 4 constrain?</p>
+    <ol class="q__opts">
+      <li data-k="a">Which layers may contain experts</li>
+      <li data-k="b">How many tokens each expert receives</li>
+      <li data-k="c">How spread the 8 picks may be: they must come from no more than 4 of 8 expert groups</li>
+      <li data-k="d">The precision of expert weights</li>
+    </ol>
+    <div class="q__why">Group-constrained routing keeps picks placeable on hardware: experts that fire together can live together. Kimi-K2 later drops the constraint back to flat top-8.</div>
+  </div>
+  <div class="q" data-answer="a">
+    <p class="q__stem">Why are V3's first 3 layers dense?</p>
+    <ol class="q__opts">
+      <li data-k="a">Early layers learn shared representations and dense layers can't collapse into imbalance</li>
+      <li data-k="b">Routers don't fit in early layers' memory budget</li>
+      <li data-k="c">Attention requires dense feed-forwards beneath it</li>
+      <li data-k="d">The first layers run on CPU</li>
+    </ol>
+    <div class="q__why">Routing from layer zero risks early collapse: experts that win early get all the gradient. Three dense layers buy a stable base every expert shares.</div>
+  </div>
+  <div class="q" data-answer="d">
+    <p class="q__stem">V2-Lite runs 2 shared experts with greedy softmax routing. What does that say about the shared count?</p>
+    <ol class="q__opts">
+      <li data-k="a">Shared experts must always be exactly 1</li>
+      <li data-k="b">Greedy routing requires 2 shared experts</li>
+      <li data-k="c">Shared experts replace the router</li>
+      <li data-k="d">The shared count is a design choice: 2 in V2-Lite, 1 in V3, Kimi-K2 and GLM-4.5</li>
+    </ol>
+    <div class="q__why">n_shared_experts is 2 in V2-Lite's config and 1 in its successors. More shared capacity means less pressure on routing — at the cost of always-on arithmetic.</div>
+  </div>
+</div>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Fine-grained MoE: 256 small experts, top-8 in ≤4 groups, one shared, sigmoid × 2.5, no auxiliary loss.</li>
+    <li>Same per-token spend as coarse MoE (~396M vs ~394M per layer) buys 32x the expert count.</li>
+    <li>Dense-first layers stabilize routing; no flagship routes from layer zero.</li>
+    <li>The shared expert's full story — including V2-Lite's two — is chapter 13.</li>
+  </ul>
+</div>

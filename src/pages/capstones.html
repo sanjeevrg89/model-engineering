@@ -1,0 +1,19 @@
+<header class="ch-head">
+  <div class="ch-head__eyebrow"><span class="label">Beyond the chapters</span></div>
+  <h1>GPU capstones</h1>
+  <p class="ch-head__dek">Four probes that test the course's predictions on real hardware: weigh a checkpoint, fill a context, count active experts, diffuse a batch. Scripts, a recorder and a self-test live in <code>capstones/</code>.</p>
+  <rev-block></rev-block>
+</header>
+
+<p>The course has no GPU, so its numbers are floors and config arithmetic. The capstones are where those predictions meet a real card. Each probe records its machine, versions and command with the result, and the recorder refuses to publish a run without them.</p>
+
+<h2 id="probes"><span class="h-num">1</span>The four probes</h2>
+
+<ol>
+  <li><strong>Weigh it.</strong> Load each roster checkpoint's configs and shard headers, sum resident bytes by dtype, and compare against the course's weight tables.</li>
+  <li><strong>Fill it.</strong> Grow one sequence to the model's max context on the reference SKU and record where allocation fails, against chapters 20 and 23.</li>
+  <li><strong>Route it.</strong> Count distinct experts touched over a fixed workload for each MoE roster model, against chapters 11, 12 and 15.</li>
+  <li><strong>Denoise it.</strong> Time LLaDA-8B diffusion steps at several mask ratios on one GPU, against chapter 25's quality-speed knob.</li>
+</ol>
+
+<p>Probes ship as the roster grows: probe 1 with the first edition, probes 2–4 as their chapters land. Until then this page is the plan, and the plan is honest about that.</p>

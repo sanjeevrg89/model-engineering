@@ -1,0 +1,136 @@
+<p>Every architecture leaves a per-token receipt, and no two receipts look alike. Qwen2.5-7B leaves 57,344 bytes of KV. DeepSeek-V3.2-Exp leaves a 70,272-byte latent plus indexer keys. Kimi-K3 leaves 27,648 bytes of latent on 24 layers and fixed recurrent state on 69. LLaDA leaves nothing reusable at all. This chapter totals one token's leftovers twice: Qwen2.5-7B's pure KV on channel A, V3.2-Exp's latent-plus-index on channel B — then tables all fifteen.</p>
+
+<h2 id="receipt"><span class="h-num">20.1</span>Two receipts for one token</h2>
+
+<figure id="fig-20-1"></figure>
+
+<p>Four kinds of state exist on the roster. Standard KV grows with heads, layers and width. MLA latents grow with rank and layers. Recurrent states (Mamba-2, Gated DeltaNet, KDA, Lightning) are fixed per layer no matter the context. Indexer keys grow with index heads and width, and diffusion keeps no cache because bidirectional attention never reuses one. The figure stacks A's single kind against B's two; the table prices all four.</p>
+
+<h2 id="kinds"><span class="h-num">20.2</span>Four kinds of leftovers</h2>
+
+<p><strong>Standard KV</strong> is 2 × layers × KV heads × head_dim × bytes. Seven roster models pay it, from 57,344 B (Qwen2.5-7B) to 376,832 B (GLM-4.5), with gpt-oss-120B's narrow heads at 73,728 B — chapter 6's table, unchanged.</p>
+
+<p><strong>MLA latents</strong> are layers × (rank + rotary) × bytes: 31,104 B for V2-Lite, 70,272 B for V3, Kimi-K2 and V3.2-Exp, 89,856 B for GLM-5.3 over 78 layers, 27,648 B for Kimi-K3 over its 24 full layers. V4.1-Flash compresses further: 4 source layers hold full context and the rest read those <ref e="dsv41-flash" p="config.json" l="106" s="kv_source_layer_ids"></ref>:</p>
+
+<excerpt e="dsv41-flash" p="config.json" l="106-112" hl="106" s="kv_source_layer_ids" title="V4.1-Flash: 4 layers hold full context"></excerpt>
+
+<p><strong>Recurrent state</strong> is constant per layer: Kimi-K3's 69 KDA layers carry it beside 24 MLA layers <ref e="kimi-k3" p="config.json" l="67" s="full_attn_layers"></ref>, and MiniMax-M2.5's config carries a 62-entry per-layer type list <ref e="minimax-m25" p="config.json" l="5" s="attn_type_list"></ref> whose kinds the vendor modeling assigns — all entries read code 1 at this revision, so the course does not infer splits from the config; chapter 19 takes the hybrid story from release notes.</p>
+
+<excerpt e="minimax-m25" p="config.json" l="5-10" hl="5" s="attn_type_list" title="MiniMax-M2.5: a 62-entry per-layer type list"></excerpt>
+
+<p><strong>Indexer keys</strong> are tokens × index heads × index width × bytes: GLM-5.3's 32 × 128 keys <ref e="glm53" p="config.json" l="19" s="index_n_heads"></ref> <ref e="glm53" p="config.json" l="18" s="index_head_dim"></ref> cost 1 GiB at 131,072 tokens in bf16 — the price of knowing what to read, from chapter 9's lab.</p>
+
+<div class="numbers">
+  <div><span class="v">57,344<small>B</small></span><span class="d">A's receipt: pure KV, Qwen2.5-7B bf16</span></div>
+  <div><span class="v">70,272<small>B</small> + index</span><span class="d">B's receipt: latent plus indexer keys, V3.2-Exp</span></div>
+  <div><span class="v">27,648<small>B</small> + fixed</span><span class="d">Kimi-K3: latent on 24 layers, recurrent state on 69</span></div>
+  <div><span class="v">0<small>B</small></span><span class="d">LLaDA-8B: bidirectional, nothing reusable</span></div>
+</div>
+
+<h2 id="roster"><span class="h-num">20.3</span>The roster, receipted</h2>
+
+<p>Bytes per token in bf16 unless noted, from <code>research/models.json</code>. Null means the formula doesn't apply, not zero — except diffusion, which is genuinely zero.</p>
+
+<div class="table wide"><table>
+<caption><span class="label">Table 20.1</span>Per-token state across the roster</caption>
+<thead><tr><th>Model</th><th>KV B</th><th>Latent B</th><th>Other state</th></tr></thead>
+<tbody>
+<tr><td>Qwen2.5-7B</td><td>57,344</td><td>—</td><td>—</td></tr>
+<tr><td>Mistral-7B-v0.1</td><td>131,072</td><td>—</td><td>—</td></tr>
+<tr><td>Mixtral-8x7B-v0.1</td><td>131,072</td><td>—</td><td>—</td></tr>
+<tr><td>Qwen3-8B</td><td>147,456</td><td>—</td><td>—</td></tr>
+<tr><td>GLM-4.5</td><td>376,832</td><td>—</td><td>—</td></tr>
+<tr><td>gpt-oss-120B</td><td>73,728</td><td>—</td><td>windowed past 128</td></tr>
+<tr><td>DeepSeek-V2-Lite</td><td>—</td><td>31,104</td><td>—</td></tr>
+<tr><td>DeepSeek-V3</td><td>—</td><td>70,272</td><td>—</td></tr>
+<tr><td>Kimi-K2</td><td>—</td><td>70,272</td><td>—</td></tr>
+<tr><td>DeepSeek-V3.2-Exp</td><td>—</td><td>70,272</td><td>indexer keys + top-2,048 reads</td></tr>
+<tr><td>GLM-5.3</td><td>—</td><td>89,856</td><td>32×128 indexer keys</td></tr>
+<tr><td>Kimi-K3</td><td>—</td><td>27,648 (24 layers)</td><td>fixed KDA state (69 layers)</td></tr>
+<tr><td>DeepSeek-V4.1-Flash</td><td>—</td><td>compressed, 4 source layers</td><td>index top-512 + window store</td></tr>
+<tr><td>MiniMax-M2.5</td><td>—</td><td>per-layer types; ch 19</td><td>fixed state on linear layers</td></tr>
+<tr><td>LLaDA-8B</td><td>0</td><td>—</td><td>no reusable cache</td></tr>
+</tbody>
+</table></div>
+
+<div class="callout callout--myth">
+  <span class="label">Easy to get wrong</span>
+  <p>Adding the columns is the mistake this chapter exists to prevent. A token's receipt is one row's kinds, not every column: KV or latent or fixed state, plus an indexer's keys where one exists. Summing KV and latent double-counts designs that keep only one.</p>
+</div>
+
+<h2 id="read"><span class="h-num">20.4</span>Read the real code</h2>
+
+<p>Every number above recomputes from two config keys and a byte width. Re-open the rows that surprise you.</p>
+
+<div class="reading">
+  <section class="reading--a">
+    <h4><span class="badge badge--a">A</span>Qwen2.5-7B</h4>
+    <ol>
+      <li><div><ref e="qwen25-7b" p="config.json" l="17" s="num_key_value_heads">config.json: 4 KV heads</ref><span>28 layers of them at width 128: 57,344 B, the smallest standard receipt.</span></div></li>
+      <li><div><ref e="qwen25-7b" p="config.json" l="12" s="max_position_embeddings">config.json: 131,072 context</ref><span>Times the receipt: 7.0 GiB at full context — chapter 23's multiplication.</span></div></li>
+    </ol>
+  </section>
+  <section class="reading--b">
+    <h4><span class="badge badge--b">B</span>DeepSeek-V3.2-Exp</h4>
+    <ol>
+      <li><div><ref e="dsv32-exp" p="config.json" l="18" s="kv_lora_rank">config.json: rank 512</ref><span>Plus 64 rotary over 61 layers: 70,272 B of latent.</span></div></li>
+      <li><div><ref e="dsv32-exp" p="config.json" l="15" s="index_topk">config.json: top-2,048</ref><span>The indexer keys beside the latent — chapter 9's subject, budgeted here.</span></div></li>
+      <li><div><ref e="dsv41-flash" p="config.json" l="106" s="kv_source_layer_ids">dsv41-flash config.json: 4 source layers</ref><span>Preview of compression beyond MLA: most layers read, few store.</span></div></li>
+    </ol>
+  </section>
+</div>
+
+<h2 id="check"><span class="h-num">20.5</span>Check yourself</h2>
+
+<div class="quiz">
+  <div class="q" data-answer="b">
+    <p class="q__stem">A Qwen2.5-7B token and a V3.2-Exp token each leave state behind. What are the two receipts?</p>
+    <ol class="q__opts">
+      <li data-k="a">57,344 B of latent vs 70,272 B of KV</li>
+      <li data-k="b">57,344 B of KV vs 70,272 B of latent plus indexer keys</li>
+      <li data-k="c">Both leave 70,272 B of latent</li>
+      <li data-k="d">Neither leaves state: both use sliding windows</li>
+    </ol>
+    <div class="q__why">Standard KV on A, compressed latent plus a scorer's keys on B. Different kinds, different formulas — never add the columns.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">Kimi-K3's 27,648 latent bytes cover 24 layers. What holds the other 69?</p>
+    <ol class="q__opts">
+      <li data-k="a">Full KV caches at 69 × 576 numbers</li>
+      <li data-k="b">Nothing — those layers are stateless</li>
+      <li data-k="c">Fixed-size KDA recurrent state, constant in context length</li>
+      <li data-k="d">A second MLA latent of rank 256</li>
+    </ol>
+    <div class="q__why">69 KDA layers carry fixed state; only the 24 full-attention layers grow a cache. That split is the hybrid's memory story.</div>
+  </div>
+  <div class="q" data-answer="a">
+    <p class="q__stem">V4.1-Flash names 4 kv_source layers out of 40. What does that imply?</p>
+    <ol class="q__opts">
+      <li data-k="a">4 layers store full context; the other 36 read those stores instead of keeping their own</li>
+      <li data-k="b">Only 4 layers run attention</li>
+      <li data-k="c">The model has 4 layers total</li>
+      <li data-k="d">KV heads are shared across 4 layers</li>
+    </ol>
+    <div class="q__why">Store where it pays, read everywhere. Compression moves the cache off most layers without removing their access — chapter 21 opens the ratios.</div>
+  </div>
+  <div class="q" data-answer="d">
+    <p class="q__stem">Why is LLaDA-8B's receipt zero?</p>
+    <ol class="q__opts">
+      <li data-k="a">It has no attention layers</li>
+      <li data-k="b">Its context is length zero</li>
+      <li data-k="c">Its weights are quantized to zero bits</li>
+      <li data-k="d">Bidirectional denoising never reuses past computation, so there is no cache to keep</li>
+    </ol>
+    <div class="q__why">KV caches exist to reuse past positions in left-to-right decoding. Diffusion refines the whole sequence every step — nothing is reusable, nothing is stored. Chapter 25.</div>
+  </div>
+</div>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Four state kinds: standard KV, MLA latent, fixed recurrent state, indexer keys. Price the row's kinds, never the columns' sum.</li>
+    <li>Receipts run from 0 B (diffusion) to 376,832 B (92-layer GQA) per token in bf16.</li>
+    <li>Compression moves storage off layers; selection moves reads off tokens; neither deletes.</li>
+    <li>Full context multiplies the receipt — chapter 23 does the multiplication.</li>
+  </ul>
+</div>

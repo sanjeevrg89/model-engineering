@@ -1,0 +1,16 @@
+{
+  "id": "ch09",
+  "dir": "ch09_topk",
+  "kicker": "Chapter 9",
+  "title": "Select top-k positions",
+  "file": "topk.py",
+  "test": "test_topk.py",
+  "solution": "solution/topk.py",
+  "support": [],
+  "local": "uv run pytest labs/ch09_topk",
+  "hints": [
+    "Best-first positions come from sorting <code>range(len(scores))</code> by score — the same pattern as the chapter 11 router.",
+    "The read fraction is selected over total: 2,048 of 8,192 is one quarter, and storage stays whole.",
+    "Indexer keys are keys only — no values, no doubling for K/V. Tokens times heads times width times bytes."
+  ]
+}

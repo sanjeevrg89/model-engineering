@@ -1,0 +1,18 @@
+<p>Mistral looks back 4,096 tokens; gpt-oss looks back 128. This chapter walks the window to both extremes: what a short window forgets, which layers get the full one, and how the mask makes it real.</p>
+
+<h2 id="outline"><span class="h-num">7.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>Sliding-window masks and their cost: linear in the window, not the context.</li>
+  <li>gpt-oss-120B's 128-token window beside its 131,072-token context.</li>
+  <li>Which layers escape the window, and why the first ones often do.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2023">2023 timeline</a> has Mistral's window, and chapter 1 shows the mask branch.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>A window caps attention cost per token; retrieval beyond it has to live somewhere else.</li>
+  </ul>
+</div>

@@ -1,0 +1,115 @@
+<header class="ch-head">
+  <div class="ch-head__eyebrow"><span class="label">About the course</span></div>
+  <h1>How this course is checked</h1>
+  <p class="ch-head__dek">Every config key, class, line number and model dimension points at one pinned release of Transformers and one pinned revision of each roster config. Here is how that is kept true.</p>
+  <rev-block></rev-block>
+</header>
+
+<h2 id="pins"><span class="h-num">1</span>What is pinned</h2>
+
+<p>The course is written against exact revisions, not against "the latest version". Channel A in every figure is the incumbent design and channel B is the challenger. Every pin lives in one file, <code>course.json</code>, with the date the course was last checked: {{checked}}.</p>
+
+<div class="table wide">
+  <table>
+    <caption><span class="label">Code</span>The implementations chapters quote</caption>
+    <thead><tr><th>Project</th><th>Release</th><th>Commit</th><th>Role in the course</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge--x">H</span> Transformers</td><td class="mono">{{hf-transformers.tag}}</td><td class="mono">{{hf-transformers.short}}</td><td>Attention, MoE and hybrid modeling code</td></tr>
+      <tr><td><span class="badge badge--x">M</span> Mamba</td><td class="mono">{{mamba.tag}}</td><td class="mono">{{mamba.short}}</td><td>Selective SSM reference (chapter 16)</td></tr>
+      <tr><td><span class="badge badge--x">V</span> vLLM</td><td class="mono">{{vllm.tag}}</td><td class="mono">{{vllm.short}}</td><td>Serving references (chapter 29)</td></tr>
+      <tr><td><span class="badge badge--x">S</span> SGLang</td><td class="mono">{{sglang.tag}}</td><td class="mono">{{sglang.short}}</td><td>Serving references (chapter 29)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The fifteen roster configs are pinned the same way, at a Hugging Face revision. The build fetches only small files at that revision, never weights: each model's <code>config.json</code> and, where the chapters cite them, its generation config and tokenizer config. A chapter cites a model dimension like a line of code, so a claim such as "4 KV heads" links to the line of the config that says so.</p>
+
+<div class="table wide">
+  <table>
+    <caption><span class="label">Models</span>Configs at pinned revisions</caption>
+    <thead><tr><th>Model</th><th>Repository</th><th>Revision</th><th>Files the build reads</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge--x">Q</span> {{qwen25-7b.name}}</td><td class="mono">Qwen/Qwen2.5-7B</td><td class="mono">{{qwen25-7b.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">W</span> {{mistral-7b.name}}</td><td class="mono">mistralai/Mistral-7B-v0.1</td><td class="mono">{{mistral-7b.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">X</span> {{mixtral-8x7b.name}}</td><td class="mono">mistralai/Mixtral-8x7B-v0.1</td><td class="mono">{{mixtral-8x7b.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">D</span> {{dsv2-lite.name}}</td><td class="mono">deepseek-ai/DeepSeek-V2-Lite</td><td class="mono">{{dsv2-lite.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">D</span> {{dsv3.name}}</td><td class="mono">deepseek-ai/DeepSeek-V3</td><td class="mono">{{dsv3.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">Q</span> {{qwen3-8b.name}}</td><td class="mono">Qwen/Qwen3-8B</td><td class="mono">{{qwen3-8b.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">Z</span> {{glm45.name}}</td><td class="mono">zai-org/GLM-4.5</td><td class="mono">{{glm45.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">O</span> {{gptoss-120b.name}}</td><td class="mono">openai/gpt-oss-120b</td><td class="mono">{{gptoss-120b.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">K</span> {{kimi-k2.name}}</td><td class="mono">moonshotai/Kimi-K2-Instruct</td><td class="mono">{{kimi-k2.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">D</span> {{dsv32-exp.name}}</td><td class="mono">deepseek-ai/DeepSeek-V3.2-Exp</td><td class="mono">{{dsv32-exp.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">L</span> {{llada-8b.name}}</td><td class="mono">GSAI-ML/LLaDA-8B-Base</td><td class="mono">{{llada-8b.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">N</span> {{minimax-m25.name}}</td><td class="mono">MiniMaxAI/MiniMax-M2.5</td><td class="mono">{{minimax-m25.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">K</span> {{kimi-k3.name}}</td><td class="mono">moonshotai/Kimi-K3</td><td class="mono">{{kimi-k3.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">Z</span> {{glm53.name}}</td><td class="mono">zai-org/GLM-5.3</td><td class="mono">{{glm53.short}}</td><td>config, generation config, tokenizer config</td></tr>
+      <tr><td><span class="badge badge--x">D</span> {{dsv41-flash.name}}</td><td class="mono">deepseek-ai/DeepSeek-V4.1-Flash</td><td class="mono">{{dsv41-flash.short}}</td><td>config, generation config, tokenizer config</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><code>scripts/fetch-sources.mjs</code> makes a shallow clone of every code repository at exactly its pinned commit, and downloads the listed model files at exactly their revision, into <code>.cache/src/</code>.</p>
+
+<h2 id="refs"><span class="h-num">2</span>References are verified by the build</h2>
+
+<p>Chapters never paste source code by hand. They use two build-time tags:</p>
+<ul>
+  <li>A <strong>reference</strong> names a file, a line and a symbol, in the pinned code or a model's files. The build opens the file at the pinned commit or revision, checks that the line exists, and checks that the symbol appears on it or within two lines. The rendered link is a permalink to that commit, on GitHub or on Hugging Face, so it keeps pointing at the right line after the projects move on.</li>
+  <li>An <strong>excerpt</strong> names a file and line ranges. The build copies those lines verbatim from the pinned file, highlights them, and numbers them with their real line numbers.</li>
+</ul>
+<p>A strict build fails if any reference or excerpt doesn't resolve. The resolved excerpts are also written to a lockfile, so the published site can be rebuilt without downloading the sources, while the check that runs on every change still verifies everything against the clones, along with every internal link and anchor.</p>
+
+<snippet lang="bash" title="What every pull request runs">
+node scripts/fetch-sources.mjs          # pinned clones and model files
+node scripts/build.mjs --strict         # every ref, symbol and excerpt
+node scripts/check-links.mjs            # every internal link and #anchor
+LAB_SOLUTION=1 uv run pytest labs       # every lab's reference solution
+node scripts/check-labs-pyodide.mjs     # the same labs in Pyodide, as the browser runs them
+</snippet>
+
+<h2 id="research"><span class="h-num">3</span>Research maps come first</h2>
+
+<p>Before a chapter is written, the facts it needs are collected in source maps under <code>research/</code>. <code>architectures.md</code> is the year-by-year timeline with links to every paper, release note and explainer. <code>models.json</code> derives every roster model's dimensions, KV and state bytes from the pinned configs, with the method beside each number. <code>curriculum.md</code> fixes which two designs each chapter runs. The citations in the maps were checked by hand against the web in October 2026, and a chapter still re-opens the file before it quotes it.</p>
+
+<h2 id="numbers"><span class="h-num">4</span>What kind of number each one is</h2>
+
+<p>Every number is one of these, and the text says which.</p>
+
+<ul>
+  <li><strong>Read from config or code.</strong> A head count, an expert count, a rank, bytes per token: stated as a fact, with a reference to the pinned line next to it. Capacity worked out from these is arithmetic, and every assumption in the budget is named.</li>
+  <li><strong>A vendor specification.</strong> The vendor's own figure, always with the SKU.</li>
+  <li><strong>A floor.</strong> A bound no real run can beat, from specifications and exact byte and FLOP counts. A step can be no faster than the longer of reading its bytes at full bandwidth and doing its arithmetic at peak FLOPS; the two overlap, so they are not added. Figures drawn on this clock say "floor" on the axis and in the caption.</li>
+  <li><strong>Measured.</strong> Only from <code>bench/</code>, with the machine, the versions and the command next to the result, or from a linked publication, attributed, with its hardware and caveats.</li>
+  <li><strong>A parameter you set.</strong> Where a figure depends on something the course cannot know, you choose the value, and the result reads as "if this, then that".</li>
+</ul>
+
+<h2 id="figures"><span class="h-num">5</span>Figures are simulations</h2>
+
+<p>The step-through figures are not drawings. Each one runs a small JavaScript model of the rule it shows: head counts, expert picks, cache bytes, denoising masks. Every step is derived from that model, and each rule in the code carries a comment naming the source line it mirrors.</p>
+
+<p>A step is marked <strong>Δ</strong> only when the two designs compute something different at that point. Steps marked <strong>=</strong> are ones where they agree.</p>
+
+<h2 id="labs"><span class="h-num">6</span>Labs test shapes and invariants</h2>
+
+<p>The labs build on a two-layer transformer in pure Python plus fixture configs copied from the pinned revisions. Most labs check shapes and counts against the real configs, and the refactor labs check the property every equivalent rewrite must keep: the logits don't change. Every lab also runs locally:</p>
+
+<snippet lang="bash" title="Running the labs locally">
+uv run pytest labs/ch01_block_shapes          # your code
+LAB_SOLUTION=1 uv run pytest labs             # every reference solution
+</snippet>
+
+<h2 id="update"><span class="h-num">7</span>Drift, re-pinning and editions</h2>
+
+<p>A new edition ships every eight weeks. New architectures arrive as cited deltas first and join the pinned roster when their configs are publicly fetchable, and the source review is repeated chapter by chapter. Between editions, a drift check carries references across to new commits and lists every reference that needs a read. Model revisions that need authentication are moved by hand.</p>
+
+<snippet lang="bash" title="Moving a source to a new release">
+node scripts/repin.mjs hf-transformers v5.10.0 --write   # carry refs across through git's diff
+node scripts/fetch-sources.mjs                            # clone the new commits into .cache/src
+node scripts/build.mjs --strict                           # lists every reference that still needs a read
+</snippet>
+
+<h2 id="independence"><span class="h-num">8</span>Independence and licenses</h2>
+
+<p>This course is independent and not affiliated with any model provider, hardware vendor or engine project. Configs are quoted verbatim with permalinks to the exact revision; code excerpts remain under their projects' licenses. The project, model and product names belong to their owners. The course doesn't use any project's logo.</p>
+
+<p>The course's own text and illustrations are licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license">CC BY 4.0</a>: share them, adapt them, translate them, with attribution. Its code (the build, the figure engine, every figure's simulation and the labs) is licensed under Apache-2.0. The source is on <a href="{{repo}}" target="_blank" rel="noopener">GitHub</a>.</p>

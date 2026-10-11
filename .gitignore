@@ -1,0 +1,16 @@
+dist/
+.cache/
+node_modules/
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+.DS_Store
+src/excerpts.lock.json.*.tmp
+dist-artifact/
+drift.md
+tools/figcheck/node_modules/
+figcheck-out/
+
+# raw capstone runs; share results through capstones/record.py, which scrubs local paths
+capstones/out/

@@ -1,0 +1,122 @@
+<p>Gated DeltaNet forgets with one scalar per head. Kimi Delta Attention forgets per channel: every feature dimension gets its own decay rate, learned beside the update. Kimi-K3 runs that mechanism across 69 linear layers with NoPE MLA layers every fourth position. This chapter updates one memory row twice: scalar gating on channel A, channel-wise decay on channel B.</p>
+
+<h2 id="decay"><span class="h-num">18.1</span>One gate per head, one gate per channel</h2>
+
+<figure id="fig-18-1"></figure>
+
+<p>The difference is resolution. A scalar gate keeps or drops a head's whole memory row at once; a channel-wise gate keeps the syntax channels and drops the stale topic channels, or the reverse next token. The Kimi Linear paper, which introduces KDA as a refinement of Gated DeltaNet, reports the 3:1 KDA-to-MLA hybrid beating full attention at matched scale across short-context, long-context and RL post-training — cited here as the paper's claim (arXiv:2510.26692), with the config below as the shipped evidence.</p>
+
+<h2 id="config"><span class="h-num">18.2</span>The shipped evidence</h2>
+
+<p>Kimi-K3's text stack declares itself <code>kimi_linear</code> <ref e="kimi-k3" p="config.json" l="175" s="model_type"></ref>, runs 93 layers deep <ref e="kimi-k3" p="config.json" l="187" s="num_hidden_layers"></ref>, and sets <code>mla_use_nope: true</code> <ref e="kimi-k3" p="config.json" l="173" s="mla_use_nope"></ref>: the periodic full-attention layers add no position embeddings of their own. Position rides the KDA layers instead — the dedicated position-aware operator beside global NoPE attention:</p>
+
+<excerpt e="kimi-k3" p="config.json" l="171-176" hl="173,175" s="mla_use_nope" title="Kimi-K3: NoPE MLA in a kimi_linear stack"></excerpt>
+
+<p>The modeling ships custom with the repository rather than from Transformers, and the config says so in its auto-map:</p>
+
+<excerpt e="kimi-k3" p="config.json" l="29-30" hl="29" s="modeling_kimi_linear" title="Kimi-K3: custom modeling beside the config"></excerpt>
+
+<p>NoPE has two practical payoffs the paper names: the MLA layers convert cleanly to multi-query attention at inference, and long-context training skips RoPE retuning entirely — no theta to raise, no YaRN to apply. Chapter 3's thetas stop mattering where KDA carries position; chapter 10's NoPE discussion gains its flagship example.</p>
+
+<div class="numbers">
+  <div><span class="v">69 + 24</span><span class="d">KDA layers plus full MLA layers in 93</span></div>
+  <div><span class="v">-5.0</span><span class="d">gate lower bound flooring the channel decays</span></div>
+  <div><span class="v">128</span><span class="d">linear head dim beside 512-rank MLA latents</span></div>
+  <div><span class="v">1,048,576</span><span class="d">max positions with NoPE attention</span></div>
+</div>
+
+<p>The floor and the head dim are config values <ref e="kimi-k3" p="config.json" l="93" s="gate_lower_bound"></ref> <ref e="kimi-k3" p="config.json" l="94" s="head_dim"></ref>: decays saturate at −5.0 instead of collapsing to zero, and the linear path works at width 128 while the MLA latent holds 512. Small numbers, load-bearing: one keeps gradients alive across a million positions, the other sizes the fixed state.</p>
+
+<h2 id="ratio"><span class="h-num">18.3</span>Every fourth layer looks back</h2>
+
+<p>The full-attention list runs 4, 8, 12, … 92, 93 <ref e="kimi-k3" p="config.json" l="67" s="full_attn_layers"></ref>: 24 NoPE MLA layers spaced through 69 KDA layers, a uniform 3:1 ratio the paper's ablations select over 1:1 (same quality, more cost) and 7:1 (worse validation). The recurrent layers compress history into fixed state; every fourth layer re-anchors retrieval to individual cached tokens. KV growth concentrates in those 24 layers — 27,648 latent bytes per token in bf16 from chapter 8's lab — while the other 69 hold constant memory at any context length.</p>
+
+<div class="sheet wide"><table>
+  <caption><span class="label">Spec sheet 18.1</span>Scalar gating against channel-wise decay</caption>
+  <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>Gated DeltaNet (paper)</th><th class="chb"><span class="badge badge--b">B</span>Kimi Delta Attention (config)</th></tr></thead>
+  <tbody>
+    <tr><th>Forgetting resolution</th><td>one scalar gate per head</td><td>one decay per feature channel</td></tr>
+    <tr><th>Gate floor</th><td>paper design</td><td>−5.0 <ref e="kimi-k3" p="config.json" l="93" s="gate_lower_bound"></ref></td></tr>
+    <tr><th>Linear head dim</th><td>paper design</td><td>128 <ref e="kimi-k3" p="config.json" l="94" s="head_dim"></ref></td></tr>
+    <tr><th>Full-attention companion</th><td>gated attention, 3:1</td><td>NoPE MLA every 4th layer <ref e="kimi-k3" p="config.json" l="173" s="mla_use_nope"></ref> <ref e="kimi-k3" p="config.json" l="67" s="full_attn_layers"></ref></td></tr>
+    <tr><th>Position</th><td>RoPE alongside</td><td>KDA carries it; MLA uses none</td></tr>
+    <tr><th>Shipped scale</th><td>Qwen3-Next lineage (cited)</td><td>93 layers, 1M context <ref e="kimi-k3" p="config.json" l="187" s="num_hidden_layers"></ref> <ref e="kimi-k3" p="config.json" l="171" s="max_position_embeddings"></ref></td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="read"><span class="h-num">18.4</span>Read the real code</h2>
+
+<p>The paper first for the mechanism, the config second for the shipped shape. Transformers v5.9.0 has no kimi_linear modeling — the repo's own auto-mapped file is the implementation.</p>
+
+<div class="reading">
+  <section class="reading--a">
+    <h4><span class="badge badge--a">A</span>Gated DeltaNet (paper design)</h4>
+    <ol>
+      <li><div><a href="https://arxiv.org/abs/2510.26692" target="_blank" rel="noopener">Kimi Linear paper, §2–§3</a><span>GDN's scalar gate beside KDA's diagonal gate; the DPLR chunkwise algorithm.</span></div></li>
+      <li><div><a href="https://arxiv.org/html/2510.04800v1" target="_blank" rel="noopener">Hybrid survey, §4</a><span>Inter-layer hybrids compared: where 3:1 comes from and what MoE adds.</span></div></li>
+    </ol>
+  </section>
+  <section class="reading--b">
+    <h4><span class="badge badge--b">B</span>Kimi-K3 config</h4>
+    <ol>
+      <li><div><ref e="kimi-k3" p="config.json" l="175" s="model_type">config.json: kimi_linear</ref><span>The stack declares its family; the auto-map names the custom modeling.</span></div></li>
+      <li><div><ref e="kimi-k3" p="config.json" l="67" s="full_attn_layers">config.json: every fourth layer</ref><span>24 full-attention positions in a 93-layer stack.</span></div></li>
+      <li><div><ref e="kimi-k3" p="config.json" l="93" s="gate_lower_bound">config.json: the floor</ref><span>−5.0 beside head dim 128: the small load-bearing numbers.</span></div></li>
+    </ol>
+  </section>
+</div>
+
+<h2 id="check"><span class="h-num">18.5</span>Check yourself</h2>
+
+<div class="quiz">
+  <div class="q" data-answer="b">
+    <p class="q__stem">What does KDA's channel-wise gate control that GDN's scalar gate doesn't?</p>
+    <ol class="q__opts">
+      <li data-k="a">Which experts activate per token</li>
+      <li data-k="b">The forgetting rate of each feature dimension independently</li>
+      <li data-k="c">The attention window size per layer</li>
+      <li data-k="d">The learning rate per layer</li>
+    </ol>
+    <div class="q__why">A scalar keeps or drops a head's whole row; a diagonal gate retains syntax channels while dropping stale ones. Finer control over the same fixed-size memory.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">Why can Kimi-K3's MLA layers use NoPE?</p>
+    <ol class="q__opts">
+      <li data-k="a">1M contexts don't need positions</li>
+      <li data-k="b">MXFP4 quantization encodes position</li>
+      <li data-k="c">The KDA layers carry position as the dedicated position-aware operator</li>
+      <li data-k="d">RoPE theta is set to zero</li>
+    </ol>
+    <div class="q__why">Position is a job, not a layer (chapter 10). KDA's recency-aware gating takes the job, and MLA converts cleanly to MQA at inference as a bonus.</div>
+  </div>
+  <div class="q" data-answer="a">
+    <p class="q__stem">How many of Kimi-K3's 93 layers are full MLA, and how are they placed?</p>
+    <ol class="q__opts">
+      <li data-k="a">24, every fourth layer plus the last</li>
+      <li data-k="b">69, everywhere except the last 24</li>
+      <li data-k="c">31, every third layer</li>
+      <li data-k="d">93 — every layer is full attention</li>
+    </ol>
+    <div class="q__why">The full_attn_layers list runs 4, 8, …, 92, 93: uniform 3:1 interleaving so retrieval re-anchors regularly through the recurrent stack.</div>
+  </div>
+  <div class="q" data-answer="d">
+    <p class="q__stem">The "beats full attention" claim in this chapter is whose, and what backs it in the course?</p>
+    <ol class="q__opts">
+      <li data-k="a">The course's own benchmark</li>
+      <li data-k="b">An engine vendor's blog</li>
+      <li data-k="c">The config's parameter counts</li>
+      <li data-k="d">The Kimi Linear paper's matched-scale runs, cited as the paper's claim, with the shipped config as evidence</li>
+    </ol>
+    <div class="q__why">Performance claims are cited or measured, never the course's own. Papers claim; configs corroborate shape. The course never benchmarks.</div>
+  </div>
+</div>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Channel-wise decay refines scalar gating: independent forgetting per feature dimension.</li>
+    <li>NoPE MLA works because KDA carries position; the payoff is MQA conversion and theta-free training.</li>
+    <li>24 full layers in 93, every fourth: retrieval re-anchors through fixed-state recurrence.</li>
+    <li>Paper claims stay attributed; the config is the shipped corroboration.</li>
+  </ul>
+</div>

@@ -1,0 +1,9 @@
+{
+  "name": "two-engines-figcheck",
+  "private": true,
+  "description": "Headless checks for the course's figures and labs (Playwright). Not needed to build the site.",
+  "type": "module",
+  "dependencies": {
+    "playwright": "^1.63.0"
+  }
+}

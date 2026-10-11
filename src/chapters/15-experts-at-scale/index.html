@@ -1,0 +1,112 @@
+<p>DeepSeek-V3 woke 8 of 256 experts. Kimi-K3 wakes 16 of 896, plus 2 shared, across 93 layers with 2.8 trillion resident weights. This chapter runs V3's routing against K3's: what changes when the expert count triples again, what MXFP4 packing does to resident memory, and why every rank must stay loaded.</p>
+
+<h2 id="scale"><span class="h-num">15.1</span>Eight hundred ninety-six experts</h2>
+
+<figure id="fig-15-1"></figure>
+
+<p>The text stack states it plainly: 896 routed experts with 16 active per token <ref e="kimi-k3" p="config.json" l="185" s="num_experts"></ref> <ref e="kimi-k3" p="config.json" l="186" s="num_experts_per_token"></ref>, 2 shared experts beside them <ref e="kimi-k3" p="config.json" l="191" s="num_shared_experts"></ref>, 93 layers deep <ref e="kimi-k3" p="config.json" l="187" s="num_hidden_layers"></ref>. The awake share falls to 1.8% of routed experts — V3 woke 3.1%, Mixtral 25%. Each generation spends about the same per token and houses multiples more.</p>
+
+<excerpt e="kimi-k3" p="config.json" l="181-191" hl="185,186,191" s="num_experts" title="Kimi-K3: 896 experts, 16 awake, 2 shared"></excerpt>
+
+<h2 id="resident"><span class="h-num">15.2</span>What 2.8 trillion weighs</h2>
+
+<p>Artificial Analysis counts 2,800B trainable parameters for Kimi-K3 (max variant) with 104B active — cited here as their numbers, not the config's, since configs don't total themselves. The packing that makes 2.8T storable is in the config: experts quantize to MXFP4 <ref e="kimi-k3" p="config.json" l="205" s="mxfp4-pack-quantized"></ref>, four bits per expert weight against the bf16 baseline of chapter 22. Narrow experts are a placement strategy as much as a quality trade: at full bf16 the resident set would need roughly four times the memory, and no fleet has it to spare.</p>
+
+<p>Placement is the rest of the chapter's subject in miniature. Every token can reach any of 896 experts, so all 896 must be resident on some GPU the token's path can reach — offloading an expert means a transfer on the critical path whenever routing picks it. Wide expert parallelism spreads experts across ranks with all-to-all dispatch; the all-to-all's pace sets the step. Chapter 29 and the Two Orchestrators course take the fleet view; the config-level fact is simpler: 898 experts per MoE layer, 16 + 2 awake, everything resident.</p>
+
+<div class="numbers">
+  <div><span class="v">896 + 2</span><span class="d">routed plus shared experts per MoE layer</span></div>
+  <div><span class="v">16 + 2</span><span class="d">experts awake per token</span></div>
+  <div><span class="v">1.8<small>%</small></span><span class="d">awake share of routed experts, down from 3.1% (V3) and 25% (Mixtral)</span></div>
+  <div><span class="v">2,800<small>B</small> / 104<small>B</small></span><span class="d">resident / active parameters, Artificial Analysis max variant, cited</span></div>
+</div>
+
+<div class="sheet wide"><table>
+  <caption><span class="label">Spec sheet 15.1</span>Fine-grained against trillion-scale MoE</caption>
+  <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>DeepSeek-V3</th><th class="chb"><span class="badge badge--b">B</span>Kimi-K3</th></tr></thead>
+  <tbody>
+    <tr><th>Routed / active / shared</th><td>256 / 8 / 1 <ref e="dsv3" p="config.json" l="26" s="n_routed_experts"></ref> <ref e="dsv3" p="config.json" l="30" s="num_experts_per_tok"></ref> <ref e="dsv3" p="config.json" l="27" s="n_shared_experts"></ref></td><td>896 / 16 / 2 <ref e="kimi-k3" p="config.json" l="185" s="num_experts"></ref> <ref e="kimi-k3" p="config.json" l="186" s="num_experts_per_token"></ref> <ref e="kimi-k3" p="config.json" l="191" s="num_shared_experts"></ref></td></tr>
+    <tr><th>Routing constraint</th><td>8 groups, ≤4; no aux loss <ref e="dsv3" p="config.json" l="25" s="n_group"></ref> <ref e="dsv3" p="config.json" l="61" s="topk_method"></ref></td><td>flat top-16, group of 1 <ref e="kimi-k3" p="config.json" l="258" s="topk_group"></ref></td></tr>
+    <tr><th>Layers</th><td>61 <ref e="dsv3" p="config.json" l="31" s="num_hidden_layers"></ref></td><td>93 <ref e="kimi-k3" p="config.json" l="187" s="num_hidden_layers"></ref></td></tr>
+    <tr><th>Attention</th><td>MLA, 128 heads</td><td>KDA + NoPE MLA, 96 heads <ref e="kimi-k3" p="config.json" l="181" s="num_attention_heads"></ref></td></tr>
+    <tr><th>Expert format</th><td>bf16-era dense</td><td>MXFP4 packed <ref e="kimi-k3" p="config.json" l="205" s="mxfp4-pack-quantized"></ref></td></tr>
+    <tr><th>Context</th><td>163,840</td><td>1,048,576 <ref e="kimi-k3" p="config.json" l="171" s="max_position_embeddings"></ref></td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="read"><span class="h-num">15.3</span>Read the real code</h2>
+
+<p>The config is the primary source at this scale; the modeling ships custom with the repo. Compare V3's grouped stanza against K3's flattened one.</p>
+
+<div class="reading">
+  <section class="reading--a">
+    <h4><span class="badge badge--a">A</span>DeepSeek-V3</h4>
+    <ol>
+      <li><div><ref e="dsv3" p="config.json" l="26" s="n_routed_experts">config.json: 256 in groups</ref><span>Groups, top-k, shared count and dense-first in lines 15–31.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/deepseek_v3/modeling_deepseek_v3.py" l="194" s="DeepseekV3MoE">deepseek_v3/modeling_deepseek_v3.py: the module</ref><span>Shared experts beside the routed pool — chapter 12's walkthrough.</span></div></li>
+    </ol>
+  </section>
+  <section class="reading--b">
+    <h4><span class="badge badge--b">B</span>Kimi-K3</h4>
+    <ol>
+      <li><div><ref e="kimi-k3" p="config.json" l="185" s="num_experts">config.json: 896 flat</ref><span>Counts, layers and shared experts in lines 181–191.</span></div></li>
+      <li><div><ref e="kimi-k3" p="config.json" l="67" s="full_attn_layers">config.json: attention split</ref><span>24 full MLA layers among 93 — chapter 18's subject, already visible here.</span></div></li>
+      <li><div><ref e="kimi-k3" p="config.json" l="205" s="mxfp4-pack-quantized">config.json: MXFP4 experts</ref><span>The packing that makes 2.8T storable — chapter 22's subject.</span></div></li>
+    </ol>
+  </section>
+</div>
+
+<h2 id="check"><span class="h-num">15.4</span>Check yourself</h2>
+
+<div class="quiz">
+  <div class="q" data-answer="b">
+    <p class="q__stem">How many experts does one Kimi-K3 token activate per MoE layer?</p>
+    <ol class="q__opts">
+      <li data-k="a">896 — everything resident runs</li>
+      <li data-k="b">18 — 16 routed plus 2 shared</li>
+      <li data-k="c">16 — the shared experts are spares</li>
+      <li data-k="d">8 — the V3 number</li>
+    </ol>
+    <div class="q__why">16 routed plus 2 always-on shared. Resident is 898; active is 18 — 1.8% of routed experts awake.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">Why must all 896 experts stay resident even though 16 run?</p>
+    <ol class="q__opts">
+      <li data-k="a">Quantization requires full residency</li>
+      <li data-k="b">The router picks the same 16 every time</li>
+      <li data-k="c">Any token can pick any expert, so an offloaded expert costs a transfer on the critical path</li>
+      <li data-k="d">Shared experts need the routed weights beside them</li>
+    </ol>
+    <div class="q__why">Routing follows content. The picks change per token, so every expert must be reachable without a fetch — placement, not just capacity.</div>
+  </div>
+  <div class="q" data-answer="a">
+    <p class="q__stem">Kimi-K3's topk_group is 1 against V3's 4-of-8 groups. What changed?</p>
+    <ol class="q__opts">
+      <li data-k="a">Routing went back to flat top-16 across all 896 experts</li>
+      <li data-k="b">Experts are grouped 16 per group</li>
+      <li data-k="c">Only 1 expert is active per token</li>
+      <li data-k="d">Groups now hold the shared experts</li>
+    </ol>
+    <div class="q__why">One group containing everything is no constraint. At 896 experts the design bets on flat selection with scale doing the specializing.</div>
+  </div>
+  <div class="q" data-answer="d">
+    <p class="q__stem">The 2,800B / 104B figures in this chapter come from where?</p>
+    <ol class="q__opts">
+      <li data-k="a">The pinned config's parameter keys</li>
+      <li data-k="b">The chapter's own arithmetic</li>
+      <li data-k="c">The Transformers modeling file</li>
+      <li data-k="d">Artificial Analysis charts, cited as their numbers</li>
+    </ol>
+    <div class="q__why">Configs don't total themselves. Third-party totals are cited as scores with the publisher named — never as config facts.</div>
+  </div>
+</div>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>896 routed + 2 shared, 16 + 2 awake: 1.8% awake, flat top-16, no group constraint.</li>
+    <li>MXFP4 experts make 2.8T storable; placement keeps all of it reachable.</li>
+    <li>Per-token spend holds roughly flat across generations while capacity multiplies.</li>
+    <li>K3's attention — KDA with NoPE MLA every fourth layer — is chapter 18.</li>
+  </ul>
+</div>

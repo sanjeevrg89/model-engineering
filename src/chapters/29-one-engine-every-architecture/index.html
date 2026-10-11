@@ -1,0 +1,18 @@
+<p>Every architecture asks its engine for something different: kernels per attention flavor, expert parallelism per MoE, disaggregation per state kind. This chapter tables the asks and the flags that matter in vLLM and SGLang.</p>
+
+<h2 id="outline"><span class="h-num">29.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>One kernel table: attention flavor against GPU and engine support.</li>
+  <li>Expert parallelism and disaggregation per roster family.</li>
+  <li>The flags that change behavior, with their defaults and GPUs.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2026">2026 timeline</a> shows what ships together, and the sibling courses serve it.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Serving is architecture-specific; the flags are part of the architecture.</li>
+  </ul>
+</div>

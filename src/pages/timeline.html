@@ -1,0 +1,82 @@
+<header class="ch-head">
+  <div class="ch-head__eyebrow"><span class="label">Reference</span></div>
+  <h1>Every architecture, year by year</h1>
+  <p class="ch-head__dek">November 2022 to October 2026: what shipped, what it changed, and which chapter teaches it. Pinned roster configs are named; newer flagships are cited deltas until their configs are publicly fetchable.</p>
+  <rev-block></rev-block>
+</header>
+
+<p>Share this page: it is the whole course on one screen. Each row links to the chapter that shows the mechanism, and every mechanism links back to the pinned config or paper in <code>research/architectures.md</code>.</p>
+
+<h2 id="y2022"><span class="h-num">2022</span>ChatGPT goes mainstream</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>When</th><th>What shipped</th><th>What changed</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>Nov 30</td><td>ChatGPT on GPT-3.5 + RLHF</td><td>LLMs go mainstream; instruction following via RLHF</td><td><a href="../ch/01-one-block/">Ch 1</a></td></tr>
+<tr><td>Dec</td><td>The LLaMA recipe forms (RMSNorm, SwiGLU, RoPE)</td><td>One decoder block every later model varies</td><td><a href="../ch/01-one-block/">Ch 1</a> · <a href="../ch/04-norms-and-gates/">Ch 4</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="y2023"><span class="h-num">2023</span>GQA, windows and the first open MoE</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>When</th><th>What shipped</th><th>What changed</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>Feb</td><td>LLaMA-7B open weights</td><td>The recipe leaks; the open ecosystem starts</td><td><a href="../ch/01-one-block/">Ch 1</a></td></tr>
+<tr><td>May</td><td>Grouped-query attention (Ainslie et al.)</td><td>KV cache shrinks several-fold</td><td><a href="../ch/06-share-the-keys/">Ch 6</a></td></tr>
+<tr><td>Jul</td><td>LLaMA-2 (GQA at 70B)</td><td>Attention splits by scale</td><td><a href="../ch/06-share-the-keys/">Ch 6</a></td></tr>
+<tr><td>Aug</td><td>YaRN context extension</td><td>Short-trained models run long contexts</td><td><a href="../ch/03-where-am-i/">Ch 3</a></td></tr>
+<tr><td>Sep</td><td>Mistral-7B-v0.1 (GQA + 4,096 window)</td><td>Efficient attention becomes table stakes · pinned roster</td><td><a href="../ch/01-one-block/">Ch 1</a> · <a href="../ch/07-look-nearby/">Ch 7</a></td></tr>
+<tr><td>Dec</td><td>Mixtral-8x7B-v0.1 (8 experts, top-2)</td><td>Open MoE flagship · pinned roster</td><td><a href="../ch/11-eight-experts-two-awake/">Ch 11</a></td></tr>
+<tr><td>Dec</td><td>Mamba (Gu &amp; Dao)</td><td>Selective SSMs challenge attention</td><td><a href="../ch/16-a-state-not-a-cache/">Ch 16</a></td></tr>
+<tr><td>Dec</td><td>Gemini 1.0 multimodal</td><td>Frontier goes natively multimodal</td><td><a href="../ch/27-early-fusion/">Ch 27</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="y2024"><span class="h-num">2024</span>Latent attention and the open wave</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>When</th><th>What shipped</th><th>What changed</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>Jan</td><td>DeepSeekMoE (fine-grained + shared expert)</td><td>Specialization without the compute bill</td><td><a href="../ch/13-shared-expert/">Ch 13</a></td></tr>
+<tr><td>Apr</td><td>Jamba (hybrid Mamba–MoE), LLaMA-3, DBRX</td><td>Hybrids arrive; GQA everywhere</td><td><a href="../ch/16-a-state-not-a-cache/">Ch 16</a></td></tr>
+<tr><td>May</td><td>DeepSeek-V2 (MLA)</td><td>KV compresses into a 512-number latent</td><td><a href="../ch/08-compress-the-cache/">Ch 8</a></td></tr>
+<tr><td>Sep</td><td>Qwen2.5-7B (dense GQA)</td><td>The reference dense block · pinned roster</td><td><a href="../ch/01-one-block/">Ch 1</a></td></tr>
+<tr><td>Sep</td><td>o1 reasoning (test-time compute)</td><td>Reasoning as RL + thinking tokens</td><td><a href="../ch/24-think-then-answer/">Ch 24</a></td></tr>
+<tr><td>Dec</td><td>DeepSeek-V3 (256 experts + MTP)</td><td>Fine-grained MoE at frontier quality · pinned roster</td><td><a href="../ch/12-tiny-experts/">Ch 12</a> · <a href="../ch/21-one-pass-several-tokens/">Ch 21</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="y2025"><span class="h-num">2025</span>Reasoning, diffusion and hybrids</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>When</th><th>What shipped</th><th>What changed</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>Jan</td><td>DeepSeek-R1 (RL on V3)</td><td>Open reasoning recipe</td><td><a href="../ch/24-think-then-answer/">Ch 24</a></td></tr>
+<tr><td>Feb</td><td>LLaDA-8B (masked diffusion)</td><td>First from-scratch diffusion LM · pinned roster</td><td><a href="../ch/25-denoise-dont-predict/">Ch 25</a></td></tr>
+<tr><td>Apr</td><td>Llama 4 Scout &amp; Maverick (MoE + iRoPE + early fusion)</td><td>Meta goes MoE and multimodal</td><td><a href="../ch/10-positions-without-embeddings/">Ch 10</a> · <a href="../ch/27-early-fusion/">Ch 27</a></td></tr>
+<tr><td>Apr</td><td>Dream-7B (AR-init diffusion), Qwen3 (QK-norm)</td><td>Diffusion starts from a talker · pinned Qwen3-8B</td><td><a href="../ch/26-start-from-a-talker/">Ch 26</a> · <a href="../ch/04-norms-and-gates/">Ch 4</a></td></tr>
+<tr><td>Jul</td><td>GLM-4.5, Kimi-K2 (MLA MoE)</td><td>MLA spreads · pinned roster</td><td><a href="../ch/08-compress-the-cache/">Ch 8</a> · <a href="../ch/15-experts-at-scale/">Ch 15</a></td></tr>
+<tr><td>Aug</td><td>gpt-oss-120B (128 experts, top-4)</td><td>Western open MoE · pinned roster</td><td><a href="../ch/14-apache-moe/">Ch 14</a></td></tr>
+<tr><td>Sep</td><td>DeepSeek-V3.2-Exp (MLA + sparse attention)</td><td>Indexer picks 2,048 of 131,072 · pinned roster</td><td><a href="../ch/09-attend-to-thousands/">Ch 9</a></td></tr>
+<tr><td>Sep</td><td>Qwen3-Next (3:1 Gated DeltaNet hybrid)</td><td>Linear layers outnumber attention 3 to 1</td><td><a href="../ch/17-memory-with-a-rule/">Ch 17</a></td></tr>
+<tr><td>Oct</td><td>Kimi Linear paper (KDA + NoPE MLA)</td><td>Channel-wise decay; hybrid claims the lead</td><td><a href="../ch/18-decay-per-channel/">Ch 18</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="y2026"><span class="h-num">2026</span>Trillion-parameter hybrids</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>When</th><th>What shipped</th><th>What changed</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>Feb</td><td>Qwen3.5-397B-A17B (production hybrid)</td><td>3:1 hybrid validated at 397B</td><td><a href="../ch/17-memory-with-a-rule/">Ch 17</a></td></tr>
+<tr><td>Apr</td><td>DeepSeek-V4-Pro (1.6T MoE)</td><td>49B active at trillion scale</td><td><a href="../ch/12-tiny-experts/">Ch 12</a></td></tr>
+<tr><td>Jun</td><td>MiniMax-M2.5 (Lightning + MLA)</td><td>Hybrid type list in the config · pinned roster</td><td><a href="../ch/19-seven-linear-one-latent/">Ch 19</a></td></tr>
+<tr><td>Jul</td><td>Kimi-K3 (2.8T), Qwen3.8 (2.4T-A95B)</td><td>Open MoEs go multi-trillion</td><td><a href="../ch/15-experts-at-scale/">Ch 15</a> · <a href="../ch/23-context-in-memory/">Ch 23</a></td></tr>
+<tr><td>Aug</td><td>GLM-5.3, DeepSeek-V4-Pro-0813</td><td>MLA+DSA flagship refresh</td><td><a href="../ch/09-attend-to-thousands/">Ch 9</a></td></tr>
+<tr><td>Sep</td><td>DeepSeek-V4.1-Flash</td><td>8B-prefill / 16B-decode active · pinned roster</td><td><a href="../ch/22-fewer-bits/">Ch 22</a> · <a href="../ch/21-one-pass-several-tokens/">Ch 21</a></td></tr>
+<tr><td>Oct</td><td>Kimi-K3 (2.8T), GLM-5.3 (753B) pinned; AA scoreboard</td><td>KDA+NoPE-MLA and MLA+DSA flagships graduate from deltas to roster; MiMo-V2.6-Pro tops intelligence at 46 with 1,020B</td><td><a href="../ch/15-experts-at-scale/">Ch 15</a> · <a href="../ch/18-decay-per-channel/">Ch 18</a> · <a href="../ch/09-attend-to-thousands/">Ch 9</a></td></tr>
+</tbody>
+</table></div>
+
+<p>Closed flagships (GPT-5.x/6, Claude 4.x/5.x, Gemini 3.x, Grok 4.x, Muse Spark) are documented behaviors in the chapters, never architectures stated as fact: their sizes are undisclosed. The full link list behind this page is <code>research/architectures.md</code> in the <a href="{{repo}}" target="_blank" rel="noopener">repository</a>.</p>

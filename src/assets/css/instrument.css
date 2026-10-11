@@ -1,0 +1,724 @@
+/* the two-channel instrument ("scope") and the SVG vocabulary it draws with */
+
+:root {
+  /* request identities, shared by both channels so R1 is R1 everywhere */
+  --r1: #0f7c74;
+  --r1-t: #d9f0ee;
+  --r2: #8a4fb0;
+  --r2-t: #efe3f6;
+  --r3: #637512;
+  --r3-t: #ebf0d5;
+  --r4: #c2416b;
+  --r4-t: #f9e0e8;
+  --r5: #4a5d73;
+  --r5-t: #e2e8ef;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --r1: #4fd1c5;
+    --r1-t: #103230;
+    --r2: #c99be8;
+    --r2-t: #2c1d38;
+    --r3: #b5cc5c;
+    --r3-t: #252d0e;
+    --r4: #f08aa9;
+    --r4-t: #3a1824;
+    --r5: #9fb3c8;
+    --r5-t: #1f2833;
+  }
+}
+
+:root[data-theme="dark"] {
+  --r1: #4fd1c5;
+  --r1-t: #103230;
+  --r2: #c99be8;
+  --r2-t: #2c1d38;
+  --r3: #b5cc5c;
+  --r3-t: #252d0e;
+  --r4: #f08aa9;
+  --r4-t: #3a1824;
+  --r5: #9fb3c8;
+  --r5-t: #1f2833;
+}
+
+.scope {
+  grid-column: wide;
+  margin: var(--s-6) 0 0;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.scope:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.scope__head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px 11px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+
+.scope__id {
+  flex: none;
+}
+
+.scope__title {
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 104;
+  font-weight: 700;
+  font-size: 0.98rem;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.scope__counter {
+  margin-left: auto;
+  flex: none;
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.scope__counter b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* params row (playground scopes) */
+.scope__params {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--rule-2);
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 96;
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+}
+
+.scope__params label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scope__params output {
+  font-family: var(--f-mono);
+  font-size: 0.76rem;
+  color: var(--ink);
+  min-width: 4ch;
+}
+
+.scope__params input[type="range"] {
+  width: 120px;
+  accent-color: var(--ink);
+}
+
+.scope__params select {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 3px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.scope__body {
+  display: grid;
+}
+
+.ch {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.ch + .ch {
+  border-top: 1px solid var(--rule-2);
+}
+
+.ch__label {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 14px 12px 14px 16px;
+  border-right: 1px solid var(--rule-2);
+  background: var(--panel);
+}
+
+.ch__letter {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 100;
+  font-weight: 840;
+  font-size: 0.95rem;
+  color: var(--panel);
+  background: var(--ink-2);
+  margin-bottom: 6px;
+}
+
+.ch--a .ch__letter {
+  background: var(--a);
+}
+
+.ch--b .ch__letter {
+  background: var(--b);
+}
+
+.ch__name {
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 108;
+  font-weight: 760;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+.ch__sub {
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+
+.ch__plot {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.ch__canvas {
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  background-color: var(--panel);
+  background-image:
+    linear-gradient(var(--grat) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grat) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+
+.ch__canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.scope--compact .ch__canvas svg {
+  min-width: 420px;
+}
+
+.ch__note {
+  padding: 8px 14px 10px;
+  border-top: 1px dashed var(--rule-2);
+  font-size: var(--t-sm);
+  line-height: 1.45;
+  color: var(--ink-2);
+  min-height: 2.9em;
+}
+
+.ch--a .ch__note b {
+  color: var(--a-ink);
+}
+
+.ch--b .ch__note b {
+  color: var(--b-ink);
+}
+
+.ch__note:empty {
+  display: none;
+}
+
+/* the delta strip: where the two engines make different decisions */
+.delta {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  border-top: 1px solid var(--rule-2);
+  border-bottom: 1px solid var(--rule-2);
+  background: var(--panel-2);
+  min-height: 34px;
+}
+
+.delta + .ch {
+  border-top: 0;
+}
+
+.delta__mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 16px;
+  border-right: 1px solid var(--rule-2);
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 80;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.delta__mark i {
+  font-style: normal;
+  font-family: var(--f-body);
+  font-size: 1.05rem;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.delta__text {
+  padding: 7px 14px 8px;
+  font-size: var(--t-sm);
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.delta.is-diff {
+  background: var(--delta-bg);
+}
+
+.delta.is-diff .delta__mark,
+.delta.is-diff .delta__text {
+  color: var(--paper);
+}
+
+.delta.is-diff .delta__mark {
+  border-right-color: color-mix(in srgb, var(--paper) 20%, transparent);
+}
+
+.delta.is-diff code {
+  background: color-mix(in srgb, var(--paper) 14%, transparent);
+  border-color: transparent;
+  color: var(--paper);
+}
+
+/* caption = narration */
+.scope__caption {
+  padding: 14px 18px 4px;
+  font-size: 1rem;
+  line-height: 1.55;
+  min-height: 4.6em;
+  max-width: 82ch;
+  border-top: 1px solid var(--rule);
+  text-wrap: pretty;
+}
+
+.scope__caption code {
+  font-size: 0.82em;
+}
+
+/* controls */
+.scope__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 14px;
+}
+
+.sc-btn {
+  display: inline-grid;
+  place-items: center;
+  height: 34px;
+  min-width: 34px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 100;
+  font-weight: 650;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: background 120ms var(--ease), border-color 120ms var(--ease);
+}
+
+.sc-btn:hover {
+  border-color: var(--ink-3);
+  background: var(--panel-2);
+}
+
+.sc-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.sc-btn--next {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+  padding: 0 14px 0 16px;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.sc-btn--next:hover {
+  background: color-mix(in srgb, var(--ink) 84%, var(--paper));
+  border-color: var(--ink);
+}
+
+.sc-btn[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sc-track {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 0 6px;
+}
+
+.sc-dot {
+  flex: 1;
+  max-width: 34px;
+  height: 22px;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.sc-dot::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 2px;
+  background: var(--rule);
+  transition: background 160ms var(--ease);
+}
+
+.sc-dot.is-past::before {
+  background: var(--ink-3);
+}
+
+.sc-dot.is-now::before {
+  background: var(--ink);
+  height: 6px;
+  margin-top: -3px;
+}
+
+.sc-dot.is-diff::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.sc-dot:focus-visible {
+  outline-offset: 0;
+}
+
+.sc-keys {
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 90;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .ch,
+  .delta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ch__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule-2);
+  }
+
+  .ch__letter {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    font-size: 0.82rem;
+  }
+
+  .ch__sub {
+    margin-left: auto;
+  }
+
+  .delta__mark {
+    border-right: 0;
+    padding-bottom: 0;
+  }
+
+  .sc-keys {
+    display: none;
+  }
+
+  .scope__caption {
+    font-size: 0.96rem;
+  }
+}
+
+/* ---- SVG vocabulary ------------------------------------------------------------ */
+:where(.scope, .svgfig) svg text {
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 100;
+  font-size: 13px;
+  fill: var(--ink);
+}
+
+svg .t-mono {
+  font-family: var(--f-mono);
+  font-size: 12px;
+}
+
+svg .t-sm {
+  font-size: 11.5px;
+}
+
+svg .t-xs {
+  font-size: 10.5px;
+}
+
+svg .t-lg {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+svg .t-label {
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 80;
+  font-weight: 660;
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  fill: var(--ink-3);
+}
+
+svg .t-dim {
+  fill: var(--ink-3);
+}
+
+svg .t-2 {
+  fill: var(--ink-2);
+}
+
+svg .t-mid {
+  text-anchor: middle;
+}
+
+svg .t-end {
+  text-anchor: end;
+}
+
+svg .t-bold {
+  font-weight: 700;
+}
+
+svg .t-a {
+  fill: var(--a-ink);
+}
+
+svg .t-b {
+  fill: var(--b-ink);
+}
+
+svg .t-inv {
+  fill: var(--paper);
+}
+
+svg .t-good {
+  fill: var(--good);
+}
+
+/* request identities as text (labels next to r1..r5 shapes) */
+svg .t-r1 { fill: var(--r1); }
+svg .t-r2 { fill: var(--r2); }
+svg .t-r3 { fill: var(--r3); }
+svg .t-r4 { fill: var(--r4); }
+svg .t-r5 { fill: var(--r5); }
+
+svg .t-bad {
+  fill: var(--bad);
+}
+
+/* shapes */
+svg .s-panel { fill: var(--panel); stroke: var(--rule); stroke-width: 1; }
+svg .s-sunk { fill: var(--sunk); stroke: var(--rule); stroke-width: 1; }
+svg .s-free { fill: var(--panel); stroke: var(--rule); stroke-width: 1; stroke-dasharray: 3 2; }
+svg .s-ink { fill: var(--ink); stroke: var(--ink); }
+svg .s-ink-o { fill: var(--panel); stroke: var(--ink); stroke-width: 1.25; }
+svg .s-a { fill: var(--a-tint); stroke: var(--a); stroke-width: 1.25; }
+svg .s-a-solid { fill: var(--a); stroke: var(--a); }
+svg .s-b { fill: var(--b-tint); stroke: var(--b); stroke-width: 1.25; }
+svg .s-b-solid { fill: var(--b); stroke: var(--b); }
+svg .s-good { fill: var(--good-tint); stroke: var(--good); stroke-width: 1.25; }
+svg .s-bad { fill: var(--bad-tint); stroke: var(--bad); stroke-width: 1.25; }
+svg .s-r1 { fill: var(--r1-t); stroke: var(--r1); stroke-width: 1.25; }
+svg .s-r2 { fill: var(--r2-t); stroke: var(--r2); stroke-width: 1.25; }
+svg .s-r3 { fill: var(--r3-t); stroke: var(--r3); stroke-width: 1.25; }
+svg .s-r4 { fill: var(--r4-t); stroke: var(--r4); stroke-width: 1.25; }
+svg .s-r5 { fill: var(--r5-t); stroke: var(--r5); stroke-width: 1.25; }
+svg .s-r1-solid { fill: var(--r1); stroke: var(--r1); }
+svg .s-r2-solid { fill: var(--r2); stroke: var(--r2); }
+svg .s-r3-solid { fill: var(--r3); stroke: var(--r3); }
+svg .s-r4-solid { fill: var(--r4); stroke: var(--r4); }
+svg .s-r5-solid { fill: var(--r5); stroke: var(--r5); }
+svg .s-hatch-a { stroke: var(--a); stroke-width: 1.25; }
+svg .s-hatch-b { stroke: var(--b); stroke-width: 1.25; }
+svg .s-hatch { stroke: var(--ink-3); stroke-width: 1; }
+svg .s-now { stroke: var(--ink) !important; stroke-width: 2.25 !important; }
+svg .s-ghost { opacity: 0.38; }
+svg .s-dashed { stroke-dasharray: 4 3; }
+
+svg .l-ink { stroke: var(--ink); stroke-width: 1.25; fill: none; }
+svg .l-2 { stroke: var(--ink-2); stroke-width: 1; fill: none; }
+svg .l-rule { stroke: var(--rule); stroke-width: 1; fill: none; }
+svg .l-a { stroke: var(--a); stroke-width: 1.5; fill: none; }
+svg .l-b { stroke: var(--b); stroke-width: 1.5; fill: none; }
+svg .l-good { stroke: var(--good); stroke-width: 1.5; fill: none; }
+svg .l-bad { stroke: var(--bad); stroke-width: 1.5; fill: none; }
+svg .l-dash { stroke-dasharray: 4 3; }
+svg .l-thick { stroke-width: 2.5; }
+svg .m-ink { fill: var(--ink); }
+svg .m-a { fill: var(--a); }
+svg .m-b { fill: var(--b); }
+
+/* keyed-renderer motion */
+:where(.scope, .svgfig) [data-k] {
+  transition:
+    transform var(--dur) var(--ease),
+    opacity var(--dur) var(--ease),
+    fill var(--dur) var(--ease),
+    stroke var(--dur) var(--ease);
+}
+
+.scope .is-enter,
+.svgfig .is-enter {
+  opacity: 0;
+}
+
+.scope .is-exit,
+.svgfig .is-exit {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scope.no-anim [data-k],
+.svgfig.no-anim [data-k] {
+  transition: none;
+}
+
+/* static svg figures in prose share the vocabulary */
+.svgfig {
+  margin: var(--s-6) 0 0;
+}
+
+.svgfig__frame {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background-color: var(--panel);
+  overflow-x: auto;
+}
+
+.svgfig__frame svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.svgfig figcaption {
+  margin-top: 10px;
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: var(--measure);
+}
+
+.svgfig figcaption b {
+  font-family: var(--f-display);
+  font-variation-settings: "wdth" 96;
+  font-weight: 700;
+  color: var(--ink);
+  margin-right: 4px;
+}
+
+/* compact scopes (the landing hero): channel labels become a header row so
+   the plot gets the full width */
+.scope--compact .ch,
+.scope--compact .delta {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.scope--compact .ch__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-right: 0;
+  border-bottom: 1px solid var(--rule-2);
+}
+
+.scope--compact .ch__letter {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.scope--compact .ch__name {
+  font-size: 0.92rem;
+}
+
+.scope--compact .ch__sub {
+  margin-left: auto;
+}
+
+.scope--compact .delta__mark {
+  border-right: 0;
+  padding-bottom: 0;
+}
+
+.scope--compact .scope__caption {
+  font-size: 0.97rem;
+  min-height: 6.2em;
+}
+
+/* single-step scopes are parameterized figures: hide the stepping UI */
+.scope.is-single .scope__controls,
+.scope.is-single .scope__counter {
+  display: none;
+}
+
+.scope.is-single .scope__caption {
+  padding-bottom: 14px;
+  min-height: 0;
+}

@@ -1,0 +1,278 @@
+{
+  "machine": {
+    "system": "Darwin",
+    "release": "25.6.0",
+    "machine": "arm64",
+    "processor": "arm"
+  },
+  "python": "3.9.6",
+  "checked": "2026-10-11",
+  "sources": {
+    "hf-transformers": {
+      "repo": "huggingface/transformers",
+      "tag": "v5.9.0",
+      "commit": "0a2757da521a7a49b8143d9e0c938f08747d682e"
+    },
+    "mamba": {
+      "repo": "state-spaces/mamba",
+      "tag": "v2.3.1",
+      "commit": "c5afbdf3bda1a09d68f65181ae3a43ec71079820"
+    },
+    "vllm": {
+      "repo": "vllm-project/vllm",
+      "tag": "v0.30.0",
+      "commit": "ced6857afa0ea7b2e3f0846a62e1394e90f15607"
+    },
+    "sglang": {
+      "repo": "sgl-project/sglang",
+      "tag": "v0.5.21",
+      "commit": "e00930c5489053f26d86b179cee0d087f846acbb"
+    },
+    "qwen25-7b": {
+      "repo": "Qwen/Qwen2.5-7B",
+      "tag": "rev d149729",
+      "commit": "d149729398750b98c0af14eb82c78cfe92750796"
+    },
+    "mistral-7b": {
+      "repo": "mistralai/Mistral-7B-v0.1",
+      "tag": "rev 27d67f1",
+      "commit": "27d67f1b5f57dc0953326b2601d68371d40ea8da"
+    },
+    "mixtral-8x7b": {
+      "repo": "mistralai/Mixtral-8x7B-v0.1",
+      "tag": "rev fc7ac94",
+      "commit": "fc7ac94680e38d7348cfa806e51218e6273104b0"
+    },
+    "dsv2-lite": {
+      "repo": "deepseek-ai/DeepSeek-V2-Lite",
+      "tag": "rev 604d566",
+      "commit": "604d5664dddd88a0433dbae533b7fe9472482de0"
+    },
+    "dsv3": {
+      "repo": "deepseek-ai/DeepSeek-V3",
+      "tag": "rev e815299",
+      "commit": "e815299b0bcbac849fa540c768ef21845365c9eb"
+    },
+    "qwen3-8b": {
+      "repo": "Qwen/Qwen3-8B",
+      "tag": "rev b968826",
+      "commit": "b968826d9c46dd6066d109eabc6255188de91218"
+    },
+    "glm45": {
+      "repo": "zai-org/GLM-4.5",
+      "tag": "rev cbb2c7c",
+      "commit": "cbb2c7cfb52fa128a9660cb1a7a78e017899e115"
+    },
+    "gptoss-120b": {
+      "repo": "openai/gpt-oss-120b",
+      "tag": "rev b5c939d",
+      "commit": "b5c939de8f754692c1647ca79fbf85e8c1e70f8a"
+    },
+    "kimi-k2": {
+      "repo": "moonshotai/Kimi-K2-Instruct",
+      "tag": "rev fd1984e",
+      "commit": "fd1984e2b7a3350dbf7305fe73a4ede25c14de50"
+    },
+    "dsv32-exp": {
+      "repo": "deepseek-ai/DeepSeek-V3.2-Exp",
+      "tag": "rev 194c67e",
+      "commit": "194c67e12b1b0d6df0ef373ddcf215bc84027409"
+    },
+    "llada-8b": {
+      "repo": "GSAI-ML/LLaDA-8B-Base",
+      "tag": "rev 0f2787f",
+      "commit": "0f2787f2d87eac5eed8a087d5ecd24277e6255b2"
+    },
+    "minimax-m25": {
+      "repo": "MiniMaxAI/MiniMax-M2.5",
+      "tag": "rev f710177",
+      "commit": "f710177d938eff80b684d42c5aa84b382612f21f"
+    },
+    "kimi-k3": {
+      "repo": "moonshotai/Kimi-K3",
+      "tag": "rev f831ab6",
+      "commit": "f831ab66814297da540d832a5235f8e904f29d06"
+    },
+    "glm53": {
+      "repo": "zai-org/GLM-5.3",
+      "tag": "rev aca966e",
+      "commit": "aca966e4e02791568aa6a4ced368624b3d897f42"
+    },
+    "dsv41-flash": {
+      "repo": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "tag": "rev 2cba9e4",
+      "commit": "2cba9e42aa026125f3ed06c6d98c1db82f7ca027"
+    }
+  },
+  "command": "python3 capstones/weigh.py --out capstones/out/weigh.json",
+  "results": {
+    "models": [
+      {
+        "model": "qwen25-7b",
+        "repo": "Qwen/Qwen2.5-7B",
+        "rev": "d14972939875",
+        "resident_bytes": 15231233024,
+        "dims": {
+          "hidden": 3584,
+          "layers": 28,
+          "vocab": 152064
+        }
+      },
+      {
+        "model": "mistral-7b",
+        "repo": "mistralai/Mistral-7B-v0.1",
+        "rev": "27d67f1b5f57",
+        "resident_bytes": 14483464192,
+        "dims": {
+          "hidden": 4096,
+          "layers": 32,
+          "vocab": 32000
+        }
+      },
+      {
+        "model": "mixtral-8x7b",
+        "repo": "mistralai/Mixtral-8x7B-v0.1",
+        "rev": "fc7ac94680e3",
+        "resident_bytes": 93405585408,
+        "dims": {
+          "hidden": 4096,
+          "layers": 32,
+          "vocab": 32000
+        }
+      },
+      {
+        "model": "dsv2-lite",
+        "repo": "deepseek-ai/DeepSeek-V2-Lite",
+        "rev": "604d5664dddd",
+        "resident_bytes": 31412968448,
+        "dims": {
+          "hidden": 2048,
+          "layers": 27,
+          "vocab": 102400
+        }
+      },
+      {
+        "model": "dsv3",
+        "repo": "deepseek-ai/DeepSeek-V3",
+        "rev": "e815299b0bcb",
+        "resident_bytes": 1369062772000,
+        "dims": {
+          "hidden": 7168,
+          "layers": 61,
+          "vocab": 129280
+        }
+      },
+      {
+        "model": "qwen3-8b",
+        "repo": "Qwen/Qwen3-8B",
+        "rev": "b968826d9c46",
+        "resident_bytes": 16381470720,
+        "dims": {
+          "hidden": 4096,
+          "layers": 36,
+          "vocab": 151936
+        }
+      },
+      {
+        "model": "glm45",
+        "repo": "zai-org/GLM-4.5",
+        "rev": "cbb2c7cfb52f",
+        "resident_bytes": 358337791296,
+        "dims": {
+          "hidden": 5120,
+          "layers": 92,
+          "vocab": 151552
+        }
+      },
+      {
+        "model": "gptoss-120b",
+        "repo": "openai/gpt-oss-120b",
+        "rev": "b5c939de8f75",
+        "resident_bytes": 65248815744,
+        "dims": {
+          "hidden": 2880,
+          "layers": 36,
+          "vocab": 201088
+        }
+      },
+      {
+        "model": "kimi-k2",
+        "repo": "moonshotai/Kimi-K2-Instruct",
+        "rev": "fd1984e2b7a3",
+        "resident_bytes": 1029173256720,
+        "dims": {
+          "hidden": 7168,
+          "layers": 61,
+          "vocab": 163840
+        }
+      },
+      {
+        "model": "dsv32-exp",
+        "repo": "deepseek-ai/DeepSeek-V3.2-Exp",
+        "rev": "194c67e12b1b",
+        "resident_bytes": 1370793842752,
+        "dims": {
+          "hidden": 7168,
+          "layers": 61,
+          "vocab": 129280
+        }
+      },
+      {
+        "model": "llada-8b",
+        "repo": "GSAI-ML/LLaDA-8B-Base",
+        "rev": "0f2787f2d87e",
+        "resident_bytes": 16031162368,
+        "dims": {
+          "hidden": 4096,
+          "layers": 32,
+          "vocab": 126464
+        }
+      },
+      {
+        "model": "minimax-m25",
+        "repo": "MiniMaxAI/MiniMax-M2.5",
+        "rev": "f710177d938e",
+        "resident_bytes": 466083044352,
+        "dims": {
+          "hidden": 3072,
+          "layers": 62,
+          "vocab": 200064
+        }
+      },
+      {
+        "model": "kimi-k3",
+        "repo": "moonshotai/Kimi-K3",
+        "rev": "f831ab668142",
+        "resident_bytes": 1560860324864,
+        "dims": {
+          "hidden": 7168,
+          "layers": 93,
+          "vocab": 163840
+        }
+      },
+      {
+        "model": "glm53",
+        "repo": "zai-org/GLM-5.3",
+        "rev": "aca966e4e027",
+        "resident_bytes": 755617140416,
+        "dims": {
+          "hidden": 6144,
+          "layers": 78,
+          "vocab": 154880
+        }
+      },
+      {
+        "model": "dsv41-flash",
+        "repo": "deepseek-ai/DeepSeek-V4.1-Flash",
+        "rev": "2cba9e42aa02",
+        "resident_bytes": 510286023000,
+        "dims": {
+          "hidden": 5120,
+          "layers": 40,
+          "vocab": 129280
+        }
+      }
+    ]
+  },
+  "review": "reviewed 2026-10-11: 15/15 shard headers at pinned revs; Qwen2.5-7B 15.23GB==7.615B params x2B, Mistral-7B 14.48GB==7.242B x2B, Mixtral 93.41GB==46.7B x2B, Kimi-K3 1560.86GB==1.561TB MXFP4, GLM-5.3 755.62GB"
+}

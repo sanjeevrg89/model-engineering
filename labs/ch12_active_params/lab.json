@@ -1,0 +1,16 @@
+{
+  "id": "ch12",
+  "dir": "ch12_active_params",
+  "kicker": "Chapter 12",
+  "title": "Count active experts",
+  "file": "active_params.py",
+  "test": "test_active_params.py",
+  "solution": "solution/active_params.py",
+  "support": [],
+  "local": "uv run pytest labs/ch12_active_params",
+  "hints": [
+    "One SwiGLU expert is three matrices: 3 times hidden times intermediate. Routed picks plus shared experts all run.",
+    "V2-Lite's 2 shared experts are always on — add them to the 6 routed, don't route them.",
+    "Dense fraction and awake share are plain divisions; the chapter's numbers strip has the answers."
+  ]
+}

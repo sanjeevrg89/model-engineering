@@ -1,0 +1,18 @@
+<p>LLaDA refines the whole answer at once instead of predicting left to right. This chapter runs Qwen2.5-7B autoregressive against LLaDA-8B diffusion: masking schedules, bidirectional attention, no KV cache, and the speed-quality knob.</p>
+
+<h2 id="outline"><span class="h-num">25.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>Masked diffusion beside next-token prediction, step for step.</li>
+  <li>Why bidirectional attention forbids the KV cache.</li>
+  <li>Denoising steps as inference-time compute: fewer steps, faster, coarser.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2025">2025 timeline</a> has the LLaDA paper, and the lab denoises by hand.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Diffusion trades the cache for parallelism over the sequence; the knob is steps, not tokens.</li>
+  </ul>
+</div>

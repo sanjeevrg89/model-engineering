@@ -1,0 +1,41 @@
+Two Engines
+Copyright 2026 the Two Engines authors
+
+This repository is dual-licensed by content type.
+
+Text and illustrations: Creative Commons Attribution 4.0 International
+(CC BY 4.0), full text in LICENSE-CONTENT.
+  - chapter prose and page content: src/chapters/*/index.html, src/pages/*.html
+  - research notes and briefs: research/
+  - images: src/assets/img/
+
+Code: Apache License 2.0, full text in LICENSE.
+  - everything that runs: scripts/, src/assets/js/, src/assets/css/,
+    src/chapters/*/viz.js and other chapter .js/.css, src/pages/index/,
+    labs/ (toyserve, starters, tests, solutions), bench/ (harnesses, reports), .github/
+
+To attribute the text, a line like this is enough:
+  "Two Engines (https://github.com/sanjeevrg89/vllm-sglang-course), CC BY 4.0"
+
+Third-party material
+--------------------
+- Source excerpts shown in the chapters are quoted verbatim from vLLM
+  (https://github.com/vllm-project/vllm) and SGLang
+  (https://github.com/sgl-project/sglang), and from tpu-inference, sglang-jax,
+  nano-vllm, llm-d and the Gateway API Inference Extension where cited, and
+  from the pinned accelerator plugins (vllm-ascend, vllm-gaudi, vllm-spyre,
+  vllm-neuron, vllm-metal, vllm-rbln, vLLM-metax, vLLM-Kunlun). Those
+  excerpts remain under their projects' own licenses (Apache License 2.0 for
+  vLLM and SGLang) and are linked to the exact commit they come from. The
+  excerpt text is cached in src/excerpts.lock.json under the same terms.
+- Model configuration files (config.json, generation_config.json, tokenizer
+  and chat-template files) are cited, and excerpted where quoted, from the
+  pinned Hugging Face revisions of Qwen3.8-27B, Qwen3.8, DeepSeek-V4.1 Flash,
+  GLM-5.3 and GLM-5.3 Flash. They remain under their publishers' licenses and
+  are fetched at build time, not redistributed here.
+- src/assets/css/codemirror.css is CodeMirror 5 base CSS, MIT License,
+  copyright Marijn Haverbeke and others.
+- Fonts (Archivo, Source Serif 4, JetBrains Mono) are loaded from Google Fonts
+  under the SIL Open Font License and are not redistributed here.
+
+This course is independent and not affiliated with the vLLM or SGLang projects.

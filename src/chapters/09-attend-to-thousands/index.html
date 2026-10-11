@@ -1,0 +1,135 @@
+<p>Latent attention compresses what gets stored. Sparse attention cuts what gets read. DeepSeek-V3.2-Exp scores every past token with a lightweight indexer and runs full MLA over only the top 2,048; GLM-5.3 ships the same design at 753B with 32 index heads. This chapter attends over 8,192 past tokens twice: dense MLA on channel A, indexed top-k on channel B.</p>
+
+<h2 id="shortlist"><span class="h-num">9.1</span>Score everything, attend to thousands</h2>
+
+<figure id="fig-9-1"></figure>
+
+<p>The indexer is cheap on purpose: small dot-product heads that rank positions without computing values. Only the winners pay for full MLA. With 8,192 past tokens and a top-2,048 selection, the attention kernel reads one quarter of the cache — while storage keeps all 8,192, because next step's winners differ. Selection is per query, every step.</p>
+
+<h2 id="indexer"><span class="h-num">9.2</span>The indexer in the config</h2>
+
+<p>V3.2-Exp states the selection in two keys: keep 2,048 positions <ref e="dsv32-exp" p="config.json" l="15" s="index_topk"></ref>, renormalize their probabilities <ref e="dsv32-exp" p="config.json" l="26" s="norm_topk_prob"></ref>. GLM-5.3 keeps the 2,048 <ref e="glm53" p="config.json" l="22" s="index_topk"></ref> and sizes the scorer: 32 index heads of width 128 <ref e="glm53" p="config.json" l="19" s="index_n_heads"></ref> <ref e="glm53" p="config.json" l="18" s="index_head_dim"></ref>:</p>
+
+<excerpt e="dsv32-exp" p="config.json" l="15,26" hl="15" s="index_topk" title="V3.2-Exp: keep 2,048, renormalize"></excerpt>
+
+<excerpt e="glm53" p="config.json" l="18-24" hl="19,22" s="index_topk" title="GLM-5.3: 32 index heads pick the 2,048"></excerpt>
+
+<p>The scorer reads the same compressed representations MLA stores, so indexing adds a small scoring pass instead of a second cache. Thirty-two heads of width 128 against 64 MLA heads of width 256: the indexer is roughly an order of magnitude cheaper than the attention it gates. That ratio is the design constraint — a selector that costs as much as attention would buy nothing.</p>
+
+<div class="numbers">
+  <div><span class="v">8,192</span><span class="d">past tokens scored in the figure</span></div>
+  <div><span class="v">2,048</span><span class="d">winners that get full MLA: one quarter of the reads</span></div>
+  <div><span class="v">32 × 128</span><span class="d">GLM-5.3 index heads and width</span></div>
+  <div><span class="v">89,856<small>B</small></span><span class="d">GLM-5.3 latent cache per token, bf16, 78 layers</span></div>
+</div>
+
+<h2 id="storage"><span class="h-num">9.3</span>Storage stays dense</h2>
+
+<p>The subtlety the figure hides in plain sight: step 2 stores everything on both channels. DSA never deletes; it skips. The indexer's keys must be able to score any past token, and the selected set changes every step, so all latents stay resident. What shrinks is HBM traffic per forward pass — the memory-bound decode's actual bottleneck — not capacity. A 1M-context GLM-5.3 still houses ~90 GB of latent per sequence in bf16; it just doesn't re-read all of it every step. Chapter 23 multiplies this out; chapter 20 budgets the indexer keys beside it.</p>
+
+<div class="callout callout--myth">
+  <span class="label">Easy to get wrong</span>
+  <p>Top-k is not a window. A window keeps the last 2,048 tokens; the indexer keeps the most relevant 2,048 anywhere in the past — including position 12 in a 100,000-token context. Recency is one signal the scorer can learn, not the mechanism.</p>
+</div>
+
+<h2 id="flagship"><span class="h-num">9.4</span>The experiment productized</h2>
+
+<p>V3.2-Exp is the experiment: 61 layers, 256 experts top-8, DSA over MLA <ref e="dsv32-exp" p="config.json" l="29" s="num_hidden_layers"></ref> <ref e="dsv32-exp" p="config.json" l="24" s="n_routed_experts"></ref>. GLM-5.3 is the flagship that productized it: 78 layers <ref e="glm53" p="config.json" l="200" s="num_hidden_layers"></ref>, the same 256 routed experts top-8 <ref e="glm53" p="config.json" l="195" s="n_routed_experts"></ref> <ref e="glm53" p="config.json" l="199" s="num_experts_per_tok"></ref>, the same top-2,048 selection — plus one MTP layer <ref e="glm53" p="config.json" l="202" s="num_nextn_predict_layers"></ref> and FP8 weights for chapters 21 and 22. V4.1-Flash tightens the selection further to top-512 over its compressed layers, with block-level candidates on top — chapter 21's stack.</p>
+
+<div class="sheet wide"><table>
+  <caption><span class="label">Spec sheet 9.1</span>The experiment and the flagship</caption>
+  <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>DeepSeek-V3.2-Exp</th><th class="chb"><span class="badge badge--b">B</span>GLM-5.3</th></tr></thead>
+  <tbody>
+    <tr><th>Selection</th><td>top-2,048, renormalized <ref e="dsv32-exp" p="config.json" l="15" s="index_topk"></ref> <ref e="dsv32-exp" p="config.json" l="26" s="norm_topk_prob"></ref></td><td>top-2,048, renormalized <ref e="glm53" p="config.json" l="22" s="index_topk"></ref></td></tr>
+    <tr><th>Indexer size</th><td>experimental sizing</td><td>32 heads × 128 <ref e="glm53" p="config.json" l="19" s="index_n_heads"></ref> <ref e="glm53" p="config.json" l="18" s="index_head_dim"></ref></td></tr>
+    <tr><th>MLA latent rank</th><td>512 <ref e="dsv32-exp" p="config.json" l="18" s="kv_lora_rank"></ref></td><td>512 <ref e="glm53" p="config.json" l="108" s="kv_lora_rank"></ref></td></tr>
+    <tr><th>Layers</th><td>61 <ref e="dsv32-exp" p="config.json" l="29" s="num_hidden_layers"></ref></td><td>78 <ref e="glm53" p="config.json" l="200" s="num_hidden_layers"></ref></td></tr>
+    <tr><th>Experts</th><td>256, top-8 <ref e="dsv32-exp" p="config.json" l="24" s="n_routed_experts"></ref> <ref e="dsv32-exp" p="config.json" l="28" s="num_experts_per_tok"></ref></td><td>256 + 1 shared, top-8 <ref e="glm53" p="config.json" l="195" s="n_routed_experts"></ref> <ref e="glm53" p="config.json" l="196" s="n_shared_experts"></ref></td></tr>
+    <tr><th>Latent B per token</th><td>70,272</td><td>89,856</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="lab"><span class="h-num">9.5</span>Build it</h2>
+
+<section class="lab" data-lab="../../labs/ch09_topk/lab.json" id="lab-9">
+  <div class="lab__brief">
+    <p>Write three functions over fixed scores: keep the top-k positions, price the read fraction they imply, and weigh the indexer's keys. The tests score 8,192 positions, select 2,048, and check GLM-5.3's indexer bytes — and catch selecting by recency instead of by score.</p>
+  </div>
+</section>
+
+<h2 id="read"><span class="h-num">9.6</span>Read the real code</h2>
+
+<p>Transformers v5.9.0 implements V3's dense MLA; the indexer lives in the experimental V3.2 modeling and the config stanzas below. Read the base first, then the selection keys.</p>
+
+<div class="reading">
+  <section class="reading--a">
+    <h4><span class="badge badge--a">A</span>DeepSeek-V3.2-Exp</h4>
+    <ol>
+      <li><div><ref e="dsv32-exp" p="config.json" l="15" s="index_topk">config.json: the selection</ref><span>2,048 winners, renormalized; the rest of the config matches V3's MLA.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/deepseek_v3/modeling_deepseek_v3.py" l="435" s="compressed_kv">deepseek_v3/modeling_deepseek_v3.py: the base</ref><span>Dense MLA the indexer selects over — the read path DSA sparsifies.</span></div></li>
+    </ol>
+  </section>
+  <section class="reading--b">
+    <h4><span class="badge badge--b">B</span>GLM-5.3</h4>
+    <ol>
+      <li><div><ref e="glm53" p="config.json" l="22" s="index_topk">config.json: productized selection</ref><span>Same 2,048 with a sized 32×128 scorer beside 64 MLA heads.</span></div></li>
+      <li><div><ref e="glm53" p="config.json" l="108" s="kv_lora_rank">config.json: the latent</ref><span>Rank 512 over 78 layers: 89,856 B per token in bf16.</span></div></li>
+      <li><div><ref e="glm53" p="config.json" l="202" s="num_nextn_predict_layers">config.json: plus MTP</ref><span>One prediction layer — chapter 21's subject, already in the config.</span></div></li>
+    </ol>
+  </section>
+</div>
+
+<h2 id="check"><span class="h-num">9.7</span>Check yourself</h2>
+
+<div class="quiz">
+  <div class="q" data-answer="b">
+    <p class="q__stem">With 8,192 past tokens and index_topk 2,048, what fraction of the cache does full attention read?</p>
+    <ol class="q__opts">
+      <li data-k="a">All of it — top-k only reorders</li>
+      <li data-k="b">One quarter: 2,048 winners get MLA, the rest are skipped this step</li>
+      <li data-k="c">One eighth: the indexer also halves it</li>
+      <li data-k="d">Nothing: the indexer replaces attention</li>
+    </ol>
+    <div class="q__why">2,048 / 8,192 = 0.25 of reads. Storage stays whole; the winners change next step. The indexer scores but never attends.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">Why must all latents stay resident if only 2,048 are read?</p>
+    <ol class="q__opts">
+      <li data-k="a">The config forbids eviction</li>
+      <li data-k="b">The indexer needs full attention over the past</li>
+      <li data-k="c">Next step's winners differ, and any past token must be scoreable and readable</li>
+      <li data-k="d">Eviction would break rotary embeddings</li>
+    </ol>
+    <div class="q__why">Selection is per query per step. A token skipped now can win later, so DSA saves traffic, not capacity — the key distinction from windows.</div>
+  </div>
+  <div class="q" data-answer="a">
+    <p class="q__stem">What does norm_topk_prob do?</p>
+    <ol class="q__opts">
+      <li data-k="a">Renormalizes the kept probabilities so the winners sum to 1</li>
+      <li data-k="b">Normalizes the indexer keys to unit length</li>
+      <li data-k="c">Caps the top-k at the window size</li>
+      <li data-k="d">Selects the top-k groups instead of tokens</li>
+    </ol>
+    <div class="q__why">Same role as the router's renormalization in chapter 11: dropped mass must not shrink the output. Both V3.2-Exp and GLM-5.3 set it true.</div>
+  </div>
+  <div class="q" data-answer="d">
+    <p class="q__stem">How does top-k selection differ from a 2,048-token sliding window?</p>
+    <ol class="q__opts">
+      <li data-k="a">It doesn't — both read 2,048 tokens</li>
+      <li data-k="b">The window is learned; top-k is fixed</li>
+      <li data-k="c">Top-k reads more: 2,048 per head</li>
+      <li data-k="d">Top-k keeps the most relevant 2,048 anywhere in the past; the window keeps the most recent</li>
+    </ol>
+    <div class="q__why">Relevance versus recency. Position 12 can win top-k in a 100,000-token context; no window reaches it. That is the retrieval case sparse attention exists for.</div>
+  </div>
+</div>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>A cheap indexer scores everything; full MLA runs over top-2,048. Reads shrink to one quarter in the figure; storage doesn't.</li>
+    <li>Selection is per query per step — winners change, so all latents stay resident.</li>
+    <li>V3.2-Exp proved it; GLM-5.3 productized it with a sized 32×128 scorer.</li>
+    <li>Kept probabilities renormalize, like router weights. Dropping mass must not shrink outputs.</li>
+  </ul>
+</div>

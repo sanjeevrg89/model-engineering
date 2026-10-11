@@ -1,0 +1,18 @@
+<p>What if the past fit in a fixed-size matrix? This chapter runs full attention against Mamba-2: selective state spaces, linear-time scans, and constant memory per layer no matter the context.</p>
+
+<h2 id="outline"><span class="h-num">16.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>Selectivity: input-dependent parameters that let state forget.</li>
+  <li>The parallel scan that trains like attention and infers like an RNN.</li>
+  <li>Constant state bytes beside growing KV caches.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2023">2023 timeline</a> has the Mamba paper, and the lab scans by hand.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>A fixed state trades exact recall for constant memory; hybrids buy the recall back with a little attention.</li>
+  </ul>
+</div>

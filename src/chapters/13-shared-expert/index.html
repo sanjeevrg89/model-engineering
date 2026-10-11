@@ -1,0 +1,18 @@
+<p>Every token passes through one expert that never turns off. This chapter traces the shared expert from DeepSeekMoE through V2-Lite, V3 and GLM-4.5: common knowledge in one path, specialization in the routed ones.</p>
+
+<h2 id="outline"><span class="h-num">13.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>What the shared expert carries that routers won't specialize.</li>
+  <li>GLM-4.5's and Kimi-K2's shared counts beside DeepSeek's.</li>
+  <li>How the shared path changes load balance math.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2024">2024 timeline</a> has the DeepSeekMoE paper, and chapter 12 has the routed side.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>One always-on expert absorbs the common cases so routed experts can afford to specialize.</li>
+  </ul>
+</div>

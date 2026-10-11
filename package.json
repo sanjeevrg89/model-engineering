@@ -1,0 +1,20 @@
+{
+  "name": "model-engineering",
+  "private": true,
+  "description": "Every Model: an illustrated, hands-on course on every important model architecture since ChatGPT, side by side",
+  "author": "sanjeevrg89 <sanjeevrg7@gmail.com>",
+  "type": "module",
+  "scripts": {
+    "sources": "node scripts/fetch-sources.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/build.mjs --strict",
+    "serve": "node scripts/serve.mjs 4173",
+    "labs": "uv run pytest labs",
+    "labs:solutions": "LAB_SOLUTION=1 uv run pytest labs",
+    "labs:pyodide": "npm install --no-save pyodide@314.0.7 && node scripts/check-labs-pyodide.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "(Apache-2.0 AND CC-BY-4.0)"
+}

@@ -1,0 +1,169 @@
+<p>Strip a dozen flagship models down to one layer and the same shape keeps showing up: normalize, attend with shared key heads, normalize again, feed through a gated projection, add what came in. Mistral-7B established it in the open in 2023, Qwen2.5-7B refined it in 2024, and every mixture-of-experts, latent-attention and hybrid model in this course starts from it before adding its own idea.</p>
+
+<p>This chapter runs one token vector through that block twice: once with Qwen2.5-7B's dimensions on channel A, once with Mistral-7B-v0.1's on channel B. You will see what RMSNorm does, how 4 key heads serve 28 query heads, why Mistral stops looking past 4,096 tokens, and what one block costs in weights. The next chapters vary each piece.</p>
+
+<h2 id="shared"><span class="h-num">1.1</span>The block both models share</h2>
+
+<p>The figure follows a single token's hidden vector from one block's input to the next. Both channels run the same six operations in the same order. They differ only in widths, in how many times shared heads repeat, and in how far back attention looks.</p>
+
+<figure id="fig-1-1"></figure>
+
+<p>The two blocks agree on the recipe and disagree on the measurements. Qwen2.5-7B stacks this block 28 times at width 3,584 <ref e="qwen25-7b" p="config.json" l="16" s="num_hidden_layers"></ref> <ref e="qwen25-7b" p="config.json" l="9" s="hidden_size"></ref>; Mistral-7B stacks it 32 times at width 4,096 <ref e="mistral-7b" p="config.json" l="14" s="num_hidden_layers"></ref> <ref e="mistral-7b" p="config.json" l="8" s="hidden_size"></ref>. Everything else in the chapter is a consequence of those two lines plus the head counts.</p>
+
+<aside class="side"><span class="label">Reference setup</span><p>Single-model numbers in this course use bf16 weights and the pinned configs. Multi-GPU serving belongs to the sibling courses; here one block on one chip is the whole world.</p></aside>
+
+<h2 id="norm-attend-feed"><span class="h-num">1.2</span>Normalize, attend, feed</h2>
+
+<p>A block does six things. RMSNorm scales the incoming vector by its own root-mean-square; the epsilon that keeps the division safe is 1e-06 in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="18" s="rms_norm_eps"></ref> and 1e-05 in Mistral-7B <ref e="mistral-7b" p="config.json" l="16" s="rms_norm_eps"></ref>. Attention mixes the normalized vector with past positions. A second RMSNorm follows, then a SwiGLU feed-forward: gate and up projections multiplied together, then down. Both models use SiLU as the hidden activation <ref e="qwen25-7b" p="config.json" l="8" s="hidden_act"></ref> <ref e="mistral-7b" p="config.json" l="7" s="hidden_act"></ref>. Residual adds carry the input around each half, so depth never has to learn the identity.</p>
+
+<p>The feed-forward's width sets most of the block's weights. Qwen2.5-7B expands 3,584 numbers to 18,944 and back <ref e="qwen25-7b" p="config.json" l="11" s="intermediate_size"></ref>; Mistral-7B expands 4,096 to 14,336 and back <ref e="mistral-7b" p="config.json" l="10" s="intermediate_size"></ref>. Three matrices each: gate, up and down. Qwen's block holds about 203.7M feed-forward weights against 29.4M in attention; Mistral's holds about 176.2M against 41.9M. The arithmetic is in the lab. The pattern to remember is the ratio: the MLP dominates, which is why later chapters put experts, sparsity and narrow formats there first.</p>
+
+<div class="numbers">
+  <div><span class="v">233.0<small>M</small></span><span class="d">weights in one Qwen2.5-7B block: 29.4M attention, 203.7M feed-forward</span></div>
+  <div><span class="v">218.1<small>M</small></span><span class="d">weights in one Mistral-7B block: 41.9M attention, 176.2M feed-forward</span></div>
+  <div><span class="v">28 / 32</span><span class="d">blocks per model, ≈ 7.6B / 7.2B weights with untied embeddings</span></div>
+  <div><span class="v">false</span><span class="d">both configs tie word embeddings: neither does</span></div>
+</div>
+
+<p>Neither model ties its output head to its input embeddings <ref e="qwen25-7b" p="config.json" l="21" s="tie_word_embeddings"></ref> <ref e="mistral-7b" p="config.json" l="19" s="tie_word_embeddings"></ref>, so each pays the vocabulary twice: 152,064 entries at width 3,584 for Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="27" s="vocab_size"></ref>, 32,000 entries at width 4,096 for Mistral-7B <ref e="mistral-7b" p="config.json" l="23" s="vocab_size"></ref>. Vocabulary size is chapter 2's subject.</p>
+
+<p>Measured against the arithmetic: the safetensors shard headers at the pinned revisions total 15.23 GB for Qwen2.5-7B and 14.48 GB for Mistral-7B — 7.615B and 7.241B weights at 2 bytes each, matching the block math above to three figures. The run is recorded in <a href="{{repo}}/blob/main/capstones/results/weigh.json" target="_blank" rel="noopener"><code>capstones/results/weigh.json</code></a>, with machine, revisions and command.</p>
+
+<h2 id="sharing"><span class="h-num">1.3</span>Share the keys</h2>
+
+<p>Neither model gives every query head its own key and value heads. Qwen2.5-7B serves 28 query heads from 4 KV heads <ref e="qwen25-7b" p="config.json" l="15" s="num_attention_heads"></ref> <ref e="qwen25-7b" p="config.json" l="17" s="num_key_value_heads"></ref>; Mistral-7B serves 32 from 8 <ref e="mistral-7b" p="config.json" l="13" s="num_attention_heads"></ref> <ref e="mistral-7b" p="config.json" l="15" s="num_key_value_heads"></ref>. The projections are sized by the KV count, not the query count. In Mistral's attention module the K and V projections output <code>num_key_value_heads × head_dim</code> numbers while Q and O use the full head count:</p>
+
+<excerpt e="hf-transformers" p="src/transformers/models/mistral/modeling_mistral.py" l="130-137" hl="130,135,136" s="num_key_value_heads" title="Mistral: K/V projections sized by KV heads, Q/O by query heads"></excerpt>
+
+<p>Before attention runs, the shared heads are repeated to the query count. Transformers does it with one verbatim function, the equivalent of <code>repeat_interleave</code> along the head axis:</p>
+
+<excerpt e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="187-196" hl="195" s="repeat_kv" title="Transformers: grouped-query attention repeats shared heads"></excerpt>
+
+<p>Qwen2.5's modeling file carries its own copy of the same function and the same group computation <ref e="hf-transformers" p="src/transformers/models/qwen2/modeling_qwen2.py" l="149" s="repeat_kv">qwen2/modeling_qwen2.py:149</ref> <ref e="hf-transformers" p="src/transformers/models/qwen2/modeling_qwen2.py" l="196" s="num_key_value_groups">qwen2/modeling_qwen2.py:196</ref>. The repeat factor is 7 for Qwen2.5-7B and 4 for Mistral-7B. Repeating is cheap arithmetic; the saving is memory. Each cached token stores only the KV heads: 4 × 128 numbers per layer for Qwen2.5-7B against 8 × 128 for Mistral-7B, which is 57,344 B against 131,072 B per token in bf16. Chapter 6 turns this into the full roster table.</p>
+
+<figure id="fig-1-2"><figcaption><b>Figure 1.2</b> KV bytes per cached token in bf16, six roster configs, computed from layers, KV heads and head width. MLA and hybrid models keep latents or fixed states instead.</figcaption></figure>
+
+<div class="callout callout--myth">
+  <span class="label">Easy to get wrong</span>
+  <p>Fewer KV heads do not mean fewer query heads or a smaller model. The queries stay at full count and full width; only what gets cached shrinks. A 7x repeat factor reads oddly until you see it this way: 28 queries, 4 memories.</p>
+</div>
+
+<h2 id="window"><span class="h-num">1.4</span>The window that isn't</h2>
+
+<p>Mistral-7B's other efficiency idea is a sliding window of 4,096 <ref e="mistral-7b" p="config.json" l="18" s="sliding_window"></ref>: each token attends to the last 4,096 positions, so a 32,768-token context <ref e="mistral-7b" p="config.json" l="11" s="max_position_embeddings"></ref> never pays full quadratic attention. In Transformers the window is a mask choice, one branch next to the causal default:</p>
+
+<excerpt e="hf-transformers" p="src/transformers/models/mistral/modeling_mistral.py" l="372-378" hl="372" s="create_sliding_window_causal_mask" title="Mistral: the window is a mask choice"></excerpt>
+
+<p>Qwen2.5-7B sets its window to 131,072 <ref e="qwen25-7b" p="config.json" l="20" s="sliding_window"></ref> and then switches the mechanism off with <code>use_sliding_window: false</code> <ref e="qwen25-7b" p="config.json" l="26" s="use_sliding_window"></ref>. Its 131,072-token context <ref e="qwen25-7b" p="config.json" l="12" s="max_position_embeddings"></ref> runs full attention. Mixtral-8x7B goes further and sets the window to null <ref e="mixtral-8x7b" p="config.json" l="23" s="sliding_window"></ref>. Three settings of the same key, three attention bills: capped, full, and absent. Chapter 7 follows the window through gpt-oss-120B's 128-token extreme.</p>
+
+<h2 id="moe-preview"><span class="h-num">1.5</span>The experts are already here</h2>
+
+<p>Mixtral-8x7B keeps Mistral's attention and replaces the feed-forward with eight of them. A router scores every token against eight expert weights and keeps the top two:</p>
+
+<excerpt e="hf-transformers" p="src/transformers/models/mixtral/modeling_mixtral.py" l="101-115" hl="104,113" s="top_k" title="Mixtral: a router keeps the top 2 of 8 experts"></excerpt>
+
+<p>The config agrees: 8 local experts, 2 per token <ref e="mixtral-8x7b" p="config.json" l="18" s="num_local_experts"></ref> <ref e="mixtral-8x7b" p="config.json" l="15" s="num_experts_per_tok"></ref>. One token touches about 394M weights per layer instead of 218M, while the checkpoint holds all eight experts resident. That gap between active and resident parameters is Part III's whole subject, starting with chapter 11.</p>
+
+<div class="sheet wide"><table>
+  <caption><span class="label">Spec sheet 1.1</span>One block in the two runners</caption>
+  <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>Qwen2.5-7B {{qwen25-7b.tag}}</th><th class="chb"><span class="badge badge--b">B</span>Mistral-7B-v0.1 {{mistral-7b.tag}}</th></tr></thead>
+  <tbody>
+    <tr><th>Layers × width</th><td>28 × 3,584 <ref e="qwen25-7b" p="config.json" l="16" s="num_hidden_layers"></ref> <ref e="qwen25-7b" p="config.json" l="9" s="hidden_size"></ref></td><td>32 × 4,096 <ref e="mistral-7b" p="config.json" l="14" s="num_hidden_layers"></ref> <ref e="mistral-7b" p="config.json" l="8" s="hidden_size"></ref></td></tr>
+    <tr><th>Query / KV heads (repeat)</th><td>28 / 4 (×7) <ref e="qwen25-7b" p="config.json" l="15" s="num_attention_heads"></ref> <ref e="qwen25-7b" p="config.json" l="17" s="num_key_value_heads"></ref></td><td>32 / 8 (×4) <ref e="mistral-7b" p="config.json" l="13" s="num_attention_heads"></ref> <ref e="mistral-7b" p="config.json" l="15" s="num_key_value_heads"></ref></td></tr>
+    <tr><th>Attention window</th><td>131,072, mechanism off <ref e="qwen25-7b" p="config.json" l="20" s="sliding_window"></ref> <ref e="qwen25-7b" p="config.json" l="26" s="use_sliding_window"></ref></td><td>4,096, mechanism on <ref e="mistral-7b" p="config.json" l="18" s="sliding_window"></ref></td></tr>
+    <tr><th>Feed-forward</th><td>SwiGLU to 18,944 <ref e="qwen25-7b" p="config.json" l="11" s="intermediate_size"></ref></td><td>SwiGLU to 14,336 <ref e="mistral-7b" p="config.json" l="10" s="intermediate_size"></ref></td></tr>
+    <tr><th>Block weights</th><td>≈ 233.0M (29.4M attention)</td><td>≈ 218.1M (41.9M attention)</td></tr>
+    <tr><th>KV bytes per token, bf16</th><td>57,344</td><td>131,072</td></tr>
+    <tr><th>Norm epsilon</th><td>1e-06 <ref e="qwen25-7b" p="config.json" l="18" s="rms_norm_eps"></ref></td><td>1e-05 <ref e="mistral-7b" p="config.json" l="16" s="rms_norm_eps"></ref></td></tr>
+    <tr><th>RoPE theta</th><td>1,000,000.0 <ref e="qwen25-7b" p="config.json" l="19" s="rope_theta"></ref></td><td>10,000.0 <ref e="mistral-7b" p="config.json" l="17" s="rope_theta"></ref></td></tr>
+  </tbody>
+</table></div>
+
+<p>The thetas differ by 100x and the windows differ by 32x. Both are position stories, and positions are next: how a model knows token 100,000 comes after token 99,999, and what changed to make that true.</p>
+
+<h2 id="lab"><span class="h-num">1.6</span>Build it</h2>
+
+<section class="lab" data-lab="../../labs/ch01_block_shapes/lab.json" id="lab-1">
+  <div class="lab__brief">
+    <p>Write three functions over the pinned fixture configs: KV bytes per token, weights per block, and active weights per token for a top-k MoE block. The tests check your answers against Qwen2.5-7B, Mistral-7B and Mixtral-8x7B at their pinned revisions, then total the models. Forgetting the K/V pair or the gate matrix is the classic off-by-two, and the tests catch both.</p>
+  </div>
+</section>
+
+<h2 id="read"><span class="h-num">1.7</span>Read the real code</h2>
+
+<p>Start from the two configs, then read the three modeling files that implement this chapter. Qwen2.5's attention is its own copy of the LLaMA mechanism; Mistral's adds the window; Mixtral's adds the router.</p>
+
+<div class="reading">
+  <section class="reading--a">
+    <h4><span class="badge badge--a">A</span>Qwen2.5-7B</h4>
+    <ol>
+      <li><div><ref e="qwen25-7b" p="config.json" l="15" s="num_attention_heads">config.json: heads and layers</ref><span>Lines 9–20 hold the whole block: width, heads, KV heads, window, theta.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/qwen2/modeling_qwen2.py" l="149" s="repeat_kv">qwen2/modeling_qwen2.py: repeat_kv</ref><span>The shared-head repeat, identical to LLaMA's, with the group count beside it.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="187" s="repeat_kv">llama/modeling_llama.py: repeat_kv</ref><span>The reference copy with the docstring that states the shape contract.</span></div></li>
+    </ol>
+  </section>
+  <section class="reading--b">
+    <h4><span class="badge badge--b">B</span>Mistral-7B-v0.1 (+ Mixtral preview)</h4>
+    <ol>
+      <li><div><ref e="mistral-7b" p="config.json" l="18" s="sliding_window">config.json: the window</ref><span>4,096 against a 32,768 context; compare Qwen's 131,072 and Mixtral's null.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/mistral/modeling_mistral.py" l="130" s="num_key_value_groups">mistral/modeling_mistral.py: projections</ref><span>K/V sized by KV heads, then the mask branch that makes the window real.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/mixtral/modeling_mixtral.py" l="101" s="MixtralTopKRouter">mixtral/modeling_mixtral.py: the router</ref><span>Top-2 of 8, renormalized; chapter 11's starting point.</span></div></li>
+    </ol>
+  </section>
+</div>
+
+<h2 id="check"><span class="h-num">1.8</span>Check yourself</h2>
+
+<div class="quiz">
+  <div class="q" data-answer="c">
+    <p class="q__stem">Qwen2.5-7B runs a forward pass over a 10-token sequence. What does the last layer produce for the server to pick token 11 from?</p>
+    <ol class="q__opts">
+      <li data-k="a">The text of the most likely word</li>
+      <li data-k="b">The id of the most likely next token</li>
+      <li data-k="c">152,064 logits, one per vocabulary entry, which the server turns into a choice</li>
+      <li data-k="d">A probability for each of the 10 input tokens</li>
+    </ol>
+    <div class="q__why">The untied LM head scores every entry of the 152,064-word vocabulary. Picking one, by argmax or sampling, is the server's job — which is why the sampler lives in the engine, not the model.</div>
+  </div>
+  <div class="q" data-answer="b">
+    <p class="q__stem">Qwen2.5-7B has 28 query heads and 4 KV heads. What does repeat_kv do before attention?</p>
+    <ol class="q__opts">
+      <li data-k="a">Averages the 28 queries down to 4</li>
+      <li data-k="b">Repeats each KV head 7 times so 28 queries each have keys and values</li>
+      <li data-k="c">Projects the 4 KV heads up to 28 with a learned matrix</li>
+      <li data-k="d">Nothing: 4 KV heads serve 28 queries directly</li>
+    </ol>
+    <div class="q__why">28 / 4 = 7. The repeat is a view-level copy, not a learned projection, which is why the saving is memory (what gets cached) rather than arithmetic.</div>
+  </div>
+  <div class="q" data-answer="a">
+    <p class="q__stem">Mistral-7B reads a 10,000-token prompt. Which tokens can position 9,999 attend to?</p>
+    <ol class="q__opts">
+      <li data-k="a">Roughly the last 4,096: positions 6,004–9,999</li>
+      <li data-k="b">All 10,000 positions</li>
+      <li data-k="c">Only position 9,998</li>
+      <li data-k="d">The first 4,096: positions 0–4,095</li>
+    </ol>
+    <div class="q__why">The sliding window is 4,096 back from the current position. Qwen2.5-7B would attend to all 10,000; its window mechanism is off.</div>
+  </div>
+  <div class="q" data-answer="d">
+    <p class="q__stem">Mixtral-8x7B routes one token with top-2 of 8 experts. About how many feed-forward weights does that token touch per layer?</p>
+    <ol class="q__opts">
+      <li data-k="a">One expert: about 176M</li>
+      <li data-k="b">All eight: about 1.4B</li>
+      <li data-k="c">None: the router replaces the feed-forward</li>
+      <li data-k="d">Two experts: about 352M, plus 42M of attention</li>
+    </ol>
+    <div class="q__why">Each expert holds 3 × 4,096 × 14,336 ≈ 176M weights and the token visits two. The other six stay resident but untouched — the active-vs-resident gap Part III is about.</div>
+  </div>
+</div>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>One decoder block — RMSNorm, grouped-query attention, RMSNorm, SwiGLU, two residuals — underlies every roster model.</li>
+    <li>KV heads are shared and repeated (×7 in Qwen2.5-7B, ×4 in Mistral-7B). Only the KV heads get cached: 57,344 B vs 131,072 B per token in bf16.</li>
+    <li>The window is a mask choice: 4,096 on, 131,072 off, null in Mixtral. Same key, three attention bills.</li>
+    <li>The MLP dominates the block, so experts, sparsity and narrow formats attack it first. Mixtral previews the pattern: 2 of 8 experts awake.</li>
+    <li>Neither model ties embeddings, so the vocabulary is paid twice. Vocabularies are chapter 2.</li>
+  </ul>
+</div>

@@ -1,0 +1,16 @@
+{
+  "id": "ch11",
+  "dir": "ch11_router",
+  "kicker": "Chapter 11",
+  "title": "Route tokens to experts",
+  "file": "router.py",
+  "test": "test_router.py",
+  "solution": "solution/router.py",
+  "support": [],
+  "local": "uv run pytest labs/ch11_router",
+  "hints": [
+    "Best-first indices come from sorting <code>range(len(scores))</code> by score, descending, then keeping k.",
+    "Renormalize <em>after</em> the top-k: the dropped experts took probability mass with them.",
+    "Balance is one division: the busiest expert's count over the total."
+  ]
+}

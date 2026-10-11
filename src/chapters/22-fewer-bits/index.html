@@ -1,0 +1,123 @@
+<p>One billion parameters weigh 2 GB in bf16, 1 GB in FP8, half a GB in MXFP4. The roster lives in all three: bf16 baselines from 2023, FP8 flagships in GLM-5.3 and V4.1-Flash, MXFP4 experts in gpt-oss-120B and Kimi-K3. This chapter weighs the same billion params three ways on channel A against B, then reads what each config actually records: format, block size, and what stays unconverted.</p>
+
+<h2 id="three-weights"><span class="h-num">22.1</span>Same params, three weights</h2>
+
+<figure id="fig-22-1"></figure>
+
+<p>Formats are bytes per number with rules about range and precision. bf16 spends 16 bits everywhere; FP8 spends 8 with a narrower range that needs per-block scales; MXFP4 spends 4 with microscaling the kernels must understand. The figure's bars are exact: bytes equal params times width. Quality at each width is a separate, measured question the course doesn't answer from arithmetic.</p>
+
+<h2 id="recorded"><span class="h-num">22.2</span>What the configs record</h2>
+
+<p>The dense baselines declare bf16 and stop there <ref e="qwen25-7b" p="config.json" l="22" s="torch_dtype"></ref> <ref e="mistral-7b" p="config.json" l="20" s="torch_dtype"></ref> <ref e="dsv3" p="config.json" l="62" s="torch_dtype"></ref>. The flagships record narrower checkpoints with schemes and block sizes. GLM-5.3 and V4.1-Flash both quantize FP8 dynamically, with 128- and 32-wide scaling blocks respectively:</p>
+
+<div class="pair">
+<excerpt e="glm53" p="config.json" l="224-228" hl="226,227" s="quant_method" title="GLM-5.3: dynamic FP8, e4m3, 128-wide blocks"></excerpt>
+<excerpt e="dsv41-flash" p="config.json" l="12-16" hl="13" s="quant_method" title="V4.1-Flash: dynamic FP8, 32-wide blocks"></excerpt>
+</div>
+
+<p>MXFP4 goes in the experts. gpt-oss-120B converts everything except attention, the router, embeddings and the head — the4-bit frontier with named exceptions:</p>
+
+<excerpt e="gptoss-120b" p="config.json" l="62-69" hl="63,69" s="mxfp4" title="gpt-oss: MXFP4 except attention, router, embeddings, head"></excerpt>
+
+<p>Kimi-K3 packs its Linear targets the same way <ref e="kimi-k3" p="config.json" l="205" s="mxfp4-pack-quantized"></ref>:</p>
+
+<excerpt e="kimi-k3" p="config.json" l="202-209" hl="205" s="mxfp4-pack-quantized" title="Kimi-K3: MXFP4-packed Linear experts"></excerpt>
+
+<div class="numbers">
+  <div><span class="v">2 / 1 / 0.5<small>B</small></span><span class="d">bytes per param: bf16, FP8, MXFP4</span></div>
+  <div><span class="v">128 / 32</span><span class="d">scaling block widths: GLM-5.3 vs V4.1-Flash FP8</span></div>
+  <div><span class="v">65.25<small>GB</small></span><span class="d">gpt-oss-120B shard headers: 120B params in MXFP4, measured</span></div>
+  <div><span class="v">1,560.86<small>GB</small></span><span class="d">Kimi-K3 shard headers: 2.8T mostly MXFP4, measured</span></div>
+</div>
+
+<p>The measured rows come from capstone probe 1 (<code>capstones/results/weigh.json</code>): 65.25 GB for 120B gpt-oss params implies ~0.54 bytes each — MXFP4 with tables and exceptions, matching the config's convert-except list. Kimi-K3's 1,560.86 GB against 2,800B counted params tells the same story at trillion scale. Formats in configs, bytes on disk, and the two agree.</p>
+
+<h2 id="blocks"><span class="h-num">22.3</span>Blocks, not tensors</h2>
+
+<p>Narrow formats scale per block, not per tensor: 128 consecutive weights share one FP8 scale in GLM-5.3, 32 in V4.1-Flash. Smaller blocks track outliers better and cost more scale metadata; the 4x difference is a precision-against-overhead dial the two vendors set differently. gpt-oss's exception list is the other half of the design: attention, routing, embeddings and the LM head stay precise while experts go narrow, because errors in routing compound across every token while errors in one expert touch few. Read any quantization_config as two decisions — how narrow, and what escapes.</p>
+
+<h2 id="cache"><span class="h-num">22.4</span>The cache can go narrow too</h2>
+
+<p>Weights are half the memory story; chapter 20's receipts are the other half, and they halve the same way. Qwen2.5-7B's 57,344 B per token in bf16 is 28,672 B in FP8 — pure arithmetic, same bytes-per-number rule. Whether an engine offers the narrower cache, and which kernels read it on which GPU, is serving configuration: chapter 29's table, not this chapter's claim. The principle travels: every byte count in this course carries an implicit "at stated precision," and narrowing is the cheapest multiplier available.</p>
+
+<div class="callout callout--myth">
+  <span class="label">Easy to get wrong</span>
+  <p>Quantization method is not model quality. A 4-bit expert can out-reason a bf16 dense block three times its active size, and often does on the 2026 scoreboard. Bits price memory and bandwidth; benchmarks price answers. Never convert one into the other without a measurement.</p>
+</div>
+
+<h2 id="read"><span class="h-num">22.5</span>Read the real code</h2>
+
+<p>Four stanzas, two formats. Baselines first for the default, then the narrow flagships.</p>
+
+<div class="reading">
+  <section class="reading--a">
+    <h4><span class="badge badge--a">A</span>bf16 baselines</h4>
+    <ol>
+      <li><div><ref e="qwen25-7b" p="config.json" l="22" s="torch_dtype">qwen25-7b config.json: bfloat16</ref><span>The default the whole 2023–2024 roster shares.</span></div></li>
+      <li><div><ref e="dsv3" p="config.json" l="62" s="torch_dtype">dsv3 config.json: bfloat16</ref><span>Even 671B ships bf16 here; narrowing arrives with the 2026 flagships.</span></div></li>
+    </ol>
+  </section>
+  <section class="reading--b">
+    <h4><span class="badge badge--b">B</span>Narrow flagships</h4>
+    <ol>
+      <li><div><ref e="glm53" p="config.json" l="224" s="quantization_config">glm53 config.json: FP8</ref><span>Dynamic e4m3 in 128-wide blocks.</span></div></li>
+      <li><div><ref e="dsv41-flash" p="config.json" l="12" s="quantization_config">dsv41-flash config.json: FP8</ref><span>Dynamic FP8 in 32-wide blocks — narrower blocks, finer tracking.</span></div></li>
+      <li><div><ref e="gptoss-120b" p="config.json" l="62" s="quantization_config">gptoss config.json: MXFP4 with exceptions</ref><span>Four-bit experts; attention, router, embeddings and head escape.</span></div></li>
+    </ol>
+  </section>
+</div>
+
+<h2 id="check"><span class="h-num">22.6</span>Check yourself</h2>
+
+<div class="quiz">
+  <div class="q" data-answer="b">
+    <p class="q__stem">One billion weights occupy how much in bf16, FP8 and MXFP4?</p>
+    <ol class="q__opts">
+      <li data-k="a">1 GB, 1 GB, 1 GB — formats don't change size</li>
+      <li data-k="b">2 GB, 1 GB, 0.5 GB — params times byte width</li>
+      <li data-k="c">4 GB, 2 GB, 1 GB — formats double-count</li>
+      <li data-k="d">0.5 GB in all three — packing is universal</li>
+    </ol>
+    <div class="q__why">2, 1 and 0.5 bytes per number respectively. gpt-oss-120B's 65.25 GB on disk for 120B params sits just above the 60 GB floor — MXFP4 plus scales and exceptions.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">Why does gpt-oss leave attention, the router, embeddings and the head unconverted?</p>
+    <ol class="q__opts">
+      <li data-k="a">Those parts have no weights</li>
+      <li data-k="b">MXFP4 kernels can't run them at all</li>
+      <li data-k="c">Errors there compound across every token, while one expert's error touches few</li>
+      <li data-k="d">The config format requires four exceptions</li>
+    </ol>
+    <div class="q__why">Precision follows blast radius. Routing and attention shape every token downstream; a single expert shapes its visitors. The exception list is the design.</div>
+  </div>
+  <div class="q" data-answer="a">
+    <p class="q__stem">GLM-5.3 scales FP8 per 128 weights, V4.1-Flash per 32. What does the smaller block buy?</p>
+    <ol class="q__opts">
+      <li data-k="a">Finer tracking of outliers at the cost of more scale metadata</li>
+      <li data-k="b">Four times fewer weights</li>
+      <li data-k="c">A larger context window</li>
+      <li data-k="d">Compatibility with bf16 kernels</li>
+    </ol>
+    <div class="q__why">Block size is a precision-against-overhead dial. Outliers get their own scale sooner in 32-wide blocks; the metadata bill grows 4x.</div>
+  </div>
+  <div class="q" data-answer="d">
+    <p class="q__stem">Qwen2.5-7B's 57,344 B/token KV receipt in FP8 would be?</p>
+    <ol class="q__opts">
+      <li data-k="a">57,344 B — caches can't narrow</li>
+      <li data-k="b">114,688 B — narrowing doubles traffic</li>
+      <li data-k="c">7,168 B — one eighth</li>
+      <li data-k="d">28,672 B — half the bytes, same arithmetic as weights</li>
+    </ol>
+    <div class="q__why">Bytes halve with precision everywhere, cache included. Whether an engine offers it is serving configuration — chapter 29.</div>
+  </div>
+</div>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>2, 1, 0.5 bytes per param: bf16 baselines, FP8 flagships, MXFP4 experts. Disk bytes corroborate.</li>
+    <li>Read quantization configs as two decisions: how narrow, and what escapes.</li>
+    <li>Block size dials outlier tracking against metadata; 128 vs 32 is a real design difference.</li>
+    <li>Caches narrow by the same arithmetic; engines decide the offering.</li>
+  </ul>
+</div>

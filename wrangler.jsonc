@@ -1,0 +1,13 @@
+{
+  // Cloudflare Workers static-assets deployment for the course site.
+  // Build: `node scripts/build.mjs` writes dist/; `npx wrangler deploy` uploads it.
+  "name": "model-engineering",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // /ch/07-prefix-reuse/ serves ch/07-prefix-reuse/index.html
+    "html_handling": "auto-trailing-slash",
+    // unknown paths get dist/404.html with a 404 status
+    "not_found_handling": "404-page"
+  }
+}

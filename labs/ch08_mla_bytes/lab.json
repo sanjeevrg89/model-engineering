@@ -1,0 +1,16 @@
+{
+  "id": "ch08",
+  "dir": "ch08_mla_bytes",
+  "kicker": "Chapter 8",
+  "title": "Weigh the latent cache",
+  "file": "mla_bytes.py",
+  "test": "test_mla_bytes.py",
+  "solution": "solution/mla_bytes.py",
+  "support": [],
+  "local": "uv run pytest labs/ch08_mla_bytes",
+  "hints": [
+    "Latent bytes are layers times (rank plus rotary width) times byte width — no factor of 2 for K/V, the latent already holds both.",
+    "Kimi-K3 counts only its 24 full-attention layers; the 69 KDA layers keep fixed recurrent state instead.",
+    "The GQA formula from chapter 6 is the comparison baseline, not the answer for MLA rows."
+  ]
+}

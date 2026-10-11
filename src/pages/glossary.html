@@ -1,0 +1,52 @@
+<header class="ch-head">
+  <div class="ch-head__eyebrow"><span class="label">Reference</span></div>
+  <h1>Glossary</h1>
+  <p class="ch-head__dek">The terms the course uses, what each design calls them, and the chapter that explains them properly. Numbers are for the course's roster configs at the pinned revisions.</p>
+</header>
+
+<dl class="gloss">
+  <dt id="decoder-block">Decoder block</dt>
+  <dd>One residual unit of a decoder-only model: RMSNorm, attention, RMSNorm, feed-forward. Every roster model stacks 27–92 of them. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a></span></dd>
+
+  <dt id="gqa">Grouped-query attention (GQA)</dt>
+  <dd>Several query heads share one key/value head. Qwen2.5-7B shares 28 queries over 4 KV heads; Mistral-7B shares 32 over 8. Transformers repeats the shared heads verbatim with <code>repeat_kv</code>. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a> · <a href="../ch/06-share-the-keys/">Chapter 6</a></span></dd>
+
+  <dt id="swa">Sliding-window attention</dt>
+  <dd>Each token attends only to the last W tokens. Mistral-7B's window is 4,096; gpt-oss-120B's is 128; Qwen2.5-7B sets 131,072 and mostly disables it. <span class="see"><a href="../ch/07-look-nearby/">Chapter 7</a></span></dd>
+
+  <dt id="mla">Multi-head latent attention (MLA)</dt>
+  <dd>Keys and values compress into one small latent per token (rank 512 in the roster's MLA models) plus a decoupled RoPE key. DeepSeek-V2-Lite debuts it; Kimi-K2 scales it. <span class="see"><a href="../ch/08-compress-the-cache/">Chapter 8</a></span></dd>
+
+  <dt id="dsa">DeepSeek sparse attention (DSA)</dt>
+  <dd>A lightning indexer scores every past token and full attention runs only over the top 2,048 (<code>index_topk</code>). Debuts in DeepSeek-V3.2-Exp on top of MLA. <span class="see"><a href="../ch/09-attend-to-thousands/">Chapter 9</a></span></dd>
+
+  <dt id="moe">Mixture of experts (MoE)</dt>
+  <dd>A router sends each token to a few expert feed-forwards: top-2 of 8 in Mixtral, top-8 of 256 in DeepSeek-V3, top-4 of 128 in gpt-oss-120B, top-8 of 384 in Kimi-K2. <span class="see"><a href="../ch/11-eight-experts-two-awake/">Chapter 11</a> · <a href="../ch/12-tiny-experts/">Chapter 12</a></span></dd>
+
+  <dt id="shared-expert">Shared expert</dt>
+  <dd>One expert every token passes through, with the router topping it up from routed experts. The DeepSeekMoE idea, carried into V2-Lite, V3 and Kimi-K2. <span class="see"><a href="../ch/13-shared-expert/">Chapter 13</a></span></dd>
+
+  <dt id="rope">RoPE</dt>
+  <dd>Rotary position embeddings: positions rotate queries and keys. Theta runs from 10,000 (Mistral-7B, DeepSeek-V3) to 5,000,000 (MiniMax-M2.5). <span class="see"><a href="../ch/03-where-am-i/">Chapter 3</a></span></dd>
+
+  <dt id="swiglu">SwiGLU</dt>
+  <dd>The gated feed-forward in every roster model: gate and up projections multiplied, then down. Three matrices per layer, two per expert. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a> · <a href="../ch/04-norms-and-gates/">Chapter 4</a></span></dd>
+
+  <dt id="qk-norm">QK-norm</dt>
+  <dd>RMSNorm applied to queries and keys per head before attention. Qwen3-8B normalizes on the head dim; it stabilizes training at depth. <span class="see"><a href="../ch/04-norms-and-gates/">Chapter 4</a></span></dd>
+
+  <dt id="hybrid">Hybrid attention</dt>
+  <dd>Mostly recurrent linear layers with periodic full-attention layers: 3:1 Gated DeltaNet in Qwen3-Next, KDA with NoPE MLA in Kimi Linear, Lightning with MLA in MiniMax-M2.5. <span class="see"><a href="../ch/17-memory-with-a-rule/">Chapter 17</a> · <a href="../ch/19-seven-linear-one-latent/">Chapter 19</a></span></dd>
+
+  <dt id="mtp">Multi-token prediction (MTP)</dt>
+  <dd>Training extra heads to predict several future tokens, which also yields draft heads for speculative decoding. DeepSeek-V3 trains with it. <span class="see"><a href="../ch/21-one-pass-several-tokens/">Chapter 21</a></span></dd>
+
+  <dt id="diffusion-lm">Diffusion language model</dt>
+  <dd>Generation by iterative denoising of masked tokens with bidirectional attention, instead of left-to-right prediction. LLaDA-8B trains this way from scratch; Dream-7B starts from autoregressive weights. No KV cache to reuse. <span class="see"><a href="../ch/25-denoise-dont-predict/">Chapter 25</a> · <a href="../ch/26-start-from-a-talker/">Chapter 26</a></span></dd>
+
+  <dt id="kv-cache">KV cache</dt>
+  <dd>The keys and values past tokens leave behind: 57,344 B per token for Qwen2.5-7B, 131,072 B for Mistral-7B and Mixtral-8x7B in bf16. MLA and hybrid models keep latents or fixed states instead. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a> · <a href="../ch/20-budget-every-state/">Chapter 20</a></span></dd>
+
+  <dt id="active-params">Active parameters</dt>
+  <dd>The weights one token actually touches: the full block for dense models, the router's picks for MoE (about 13B of Mixtral's 47B, 37B of DeepSeek-V3's 671B). Resident weights still need their memory. <span class="see"><a href="../ch/12-tiny-experts/">Chapter 12</a></span></dd>
+</dl>

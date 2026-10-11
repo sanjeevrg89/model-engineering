@@ -1,0 +1,25 @@
+<header class="ch-head">
+  <div class="ch-head__eyebrow"><span class="label">Beyond the chapters</span></div>
+  <h1>From reader to contributor</h1>
+  <p class="ch-head__dek">New architectures arrive monthly. This page is how a reader turns the next release into a course update: the ten-minute read, the delta paragraph, and the path to a first pull request.</p>
+  <rev-block></rev-block>
+</header>
+
+<p>Every chapter ends with a reading list into the real configs and code. This page is for the step after reading: a new model drops, and you want the course to cover it.</p>
+
+<h2 id="ten-minutes"><span class="h-num">1</span>The ten-minute read</h2>
+
+<ol>
+  <li>Open the release's <code>config.json</code> on the Hub. Read heads, KV heads, layers, experts, ranks, windows, theta — the same keys every roster table uses.</li>
+  <li>Find its modeling file in Transformers. Diff the attention and MoE blocks against the closest roster model.</li>
+  <li>Read the paper or release note once, for what the authors claim changed and why.</li>
+</ol>
+<p>Chapter 30 walks this end to end. If the config is gated behind login, stop: the course only pins publicly fetchable revisions.</p>
+
+<h2 id="delta"><span class="h-num">2</span>Write the delta first</h2>
+
+<p>A new architecture joins the course as a cited delta: one paragraph in the relevant chapter, a paper or release-note link, and what changed relative to the roster. No config values from memory, no parameter counts from press coverage. It graduates to the pinned roster when its config is fetchable and two chapters cite it.</p>
+
+<h2 id="pr"><span class="h-num">3</span>Open the pull request</h2>
+
+<p>One delta per pull request, with the fetch command, the strict build output and the recomputed rows of <code>research/models.json</code>. The checklist in <code>AUTHORING.md</code> is the review: pins, refs, figures, lab, quiz, voice.</p>

@@ -1,0 +1,18 @@
+<p>Theta runs from 10,000 in Mistral-7B to 5,000,000 in MiniMax-M2.5. This chapter turns positions into frequencies: what RoPE rotates, why a bigger theta reaches further, how YaRN stretches a short-trained model, and which layers stopped using positions at all.</p>
+
+<h2 id="outline"><span class="h-num">3.1</span>What this chapter will show</h2>
+
+<ul>
+  <li>RoPE frequencies computed from theta and head dim, for the roster's thetas.</li>
+  <li>YaRN rescaling and the 4k-to-128k jumps of 2023.</li>
+  <li>NoPE and interleaved RoPE: who carries position when attention doesn't.</li>
+</ul>
+
+<p>Meanwhile, the <a href="../../timeline/#y2023">2023 timeline</a> has the YaRN moment, and the lab builds the frequency table by hand.</p>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Position is rotation with a wavelength schedule; theta sets the longest wavelength the model can likely resolve.</li>
+  </ul>
+</div>
