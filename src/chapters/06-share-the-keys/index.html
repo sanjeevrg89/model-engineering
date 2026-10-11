@@ -1,12 +1,14 @@
-<p>Chapter 5 counted weights. This chapter counts the other bill: the keys and values every past token leaves behind. Mistral-7B stores 8 heads per layer, Qwen2.5-7B stores 4, DeepSeek-V4.1-Flash stores 1. Same queries, same model quality discipline, three memory bills — and the roster stretches from 1 to 128 KV heads.</p>
+<p>Qwen3-8B serves 32 queries from 8 key heads. gpt-oss-120B serves 64 queries from 8 narrow heads — and stops looking past 128 tokens. Same queries-everywhere discipline as 2023, two 2025 answers: narrower heads, shorter windows. The 2023 pair (Mistral-7B's 8 heads, Qwen2.5-7B's 4) proved the mechanism; this chapter runs the current one.</p>
 
-<p>The figure reads one decode step's KV memory for 1,024 cached tokens, layer by layer: Mistral-7B on channel A, Qwen2.5-7B on channel B. Watch the per-layer width first, then the totals, then the moment B runs out of layers and A keeps reading.</p>
+<p>The figure reads one decode step's KV memory for 1,024 cached tokens, layer by layer: Qwen3-8B on channel A, gpt-oss-120B on channel B. Watch the per-layer width first, then the window cutting B's read short, then the totals.</p>
+
+<div class="tldr"><span class="label">The 2-minute version</span><p>KV heads are a memory knob: Qwen3-8B shares 32 queries over 8 heads, gpt-oss-120B shares 64 over 8 narrow heads inside a 128-token window. Fewer, narrower heads plus a short window turn 144 MiB of KV reads into 9 MiB for the same 1,024 cached tokens.</p><span class="obj">After this chapter you can: compute any model's repeat factor and KV bytes from its config · explain why V4.1-Flash's single KV head works · price a full context in GiB.</span></div>
 
 <h2 id="knob"><span class="h-num">6.1</span>One knob, three settings</h2>
 
 <figure id="fig-6-1"></figure>
 
-<p>Multi-head attention gives every query head its own KV heads. Multi-query attention gives the whole layer one. Grouped-query attention lands between: 8 groups in Mistral-7B <ref e="mistral-7b" p="config.json" l="13" s="num_attention_heads"></ref> <ref e="mistral-7b" p="config.json" l="15" s="num_key_value_heads"></ref>, 4 in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="15" s="num_attention_heads"></ref> <ref e="qwen25-7b" p="config.json" l="17" s="num_key_value_heads"></ref>, 1 in V4.1-Flash's text stack <ref e="dsv41-flash" p="config.json" l="28" s="num_attention_heads"></ref> <ref e="dsv41-flash" p="config.json" l="29" s="num_key_value_heads"></ref>. The query count never moves with the knob: 32, 28 and 64 queries respectively. Only what gets cached shrinks.</p>
+<p>Multi-head attention gives every query head its own KV heads. Multi-query attention gives the whole layer one. Grouped-query attention lands between: 8 groups in Qwen3-8B <ref e="qwen3-8b" p="config.json" l="17" s="num_attention_heads"></ref> <ref e="qwen3-8b" p="config.json" l="19" s="num_key_value_heads"></ref> and in gpt-oss-120B <ref e="gptoss-120b" p="config.json" l="55" s="num_attention_heads"></ref> <ref e="gptoss-120b" p="config.json" l="58" s="num_key_value_heads"></ref>, 4 in Qwen2.5-7B, 1 in V4.1-Flash's text stack <ref e="dsv41-flash" p="config.json" l="28" s="num_attention_heads"></ref> <ref e="dsv41-flash" p="config.json" l="29" s="num_key_value_heads"></ref>. The query count never moves with the knob: 32, 64 and 64 queries respectively. Only what gets cached shrinks — and gpt-oss halves head dim to 64 <ref e="gptoss-120b" p="config.json" l="9" s="head_dim"></ref> for a second halving on top.</p>
 
 <aside class="side"><span class="label">The extremes</span><p>LLaDA-8B keeps full multi-head attention (32 queries, 32 KV heads) because bidirectional denoising never reuses a cache. DeepSeek-V2-Lite keeps 16 and 16 and compresses instead — chapter 8.</p></aside>
 
@@ -19,13 +21,13 @@
 <excerpt e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="199-212" hl="209,210" s="repeat_kv" title="LLaMA: the repeat runs every forward pass"></excerpt>
 </div>
 
-<p>The repeat is a view-level copy before the matmul, so it costs arithmetic proportional to what attention would have read anyway. The saving is everything around it: smaller K/V projections, smaller optimizer states in training, and above all a smaller cache. Qwen2.5-7B repeats ×7, Mistral-7B ×4, V4.1-Flash ×64. The ×64 looks extreme until the next section's table shows what it buys at 1M context.</p>
+<p>The repeat is a view-level copy before the matmul, so it costs arithmetic proportional to what attention would have read anyway. The saving is everything around it: smaller K/V projections, smaller optimizer states in training, and above all a smaller cache. Qwen3-8B repeats ×4, gpt-oss-120B ×8, V4.1-Flash ×64. The ×64 looks extreme until the next section's table shows what it buys at 1M context — and gpt-oss pairs its ×8 with a 128-token window, so the saving compounds.</p>
 
 <div class="numbers">
-  <div><span class="v">4,096<small>B</small></span><span class="d">KV read per layer per token, Mistral-7B (8 heads × 128 × 2 × 2 B)</span></div>
-  <div><span class="v">2,048<small>B</small></span><span class="d">KV read per layer per token, Qwen2.5-7B (4 heads × 128 × 2 × 2 B)</span></div>
-  <div><span class="v">128<small>MiB</small></span><span class="d">A's full read: 1,024 tokens × 32 layers</span></div>
-  <div><span class="v">56<small>MiB</small></span><span class="d">B's full read: 1,024 tokens × 28 layers</span></div>
+  <div><span class="v">4,096<small>B</small></span><span class="d">KV read per layer per token, Qwen3-8B (8 heads × 128 × 2 × 2 B)</span></div>
+  <div><span class="v">2,048<small>B</small></span><span class="d">KV read per layer per token, gpt-oss-120B (8 heads × 64 × 2 × 2 B)</span></div>
+  <div><span class="v">144<small>MiB</small></span><span class="d">A's full read: 1,024 tokens × 36 layers</span></div>
+  <div><span class="v">9<small>MiB</small></span><span class="d">B's windowed read: 128 tokens × 36 layers</span></div>
 </div>
 
 <h2 id="roster"><span class="h-num">6.3</span>The roster, one row each</h2>
@@ -74,19 +76,19 @@
 
 <div class="reading">
   <section class="reading--a">
-    <h4><span class="badge badge--a">A</span>Mistral-7B-v0.1</h4>
+    <h4><span class="badge badge--a">A</span>Qwen3-8B</h4>
     <ol>
-      <li><div><ref e="mistral-7b" p="config.json" l="15" s="num_key_value_heads">config.json: 8 KV heads</ref><span>32 queries over 8 KV heads at width 128, window 4,096 beside it.</span></div></li>
-      <li><div><ref e="hf-transformers" p="src/transformers/models/mistral/modeling_mistral.py" l="130" s="num_key_value_groups">mistral/modeling_mistral.py: projections</ref><span>K/V sized by KV heads; the group count is one division.</span></div></li>
-      <li><div><ref e="hf-transformers" p="src/transformers/models/mistral/modeling_mistral.py" l="372" s="create_sliding_window_causal_mask">mistral/modeling_mistral.py: the window</ref><span>Why 131,072 B per token never multiplies past 4,096 positions here.</span></div></li>
+      <li><div><ref e="qwen3-8b" p="config.json" l="19" s="num_key_value_heads">config.json: 8 KV heads</ref><span>32 queries over 8 KV heads at width 128, 36 layers, full context.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/qwen3/modeling_qwen3.py" l="230" s="head_dim">qwen3/modeling_qwen3.py: head dim</ref><span>Width resolution beside the QK-norms — chapter 4's subject, sized here.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="187" s="repeat_kv">llama/modeling_llama.py: repeat_kv</ref><span>The reference copy with the shape contract in its docstring.</span></div></li>
     </ol>
   </section>
   <section class="reading--b">
-    <h4><span class="badge badge--b">B</span>Qwen2.5-7B</h4>
+    <h4><span class="badge badge--b">B</span>gpt-oss-120B</h4>
     <ol>
-      <li><div><ref e="qwen25-7b" p="config.json" l="17" s="num_key_value_heads">config.json: 4 KV heads</ref><span>28 queries over 4 KV heads; the narrowest dense GQA on the roster.</span></div></li>
-      <li><div><ref e="hf-transformers" p="src/transformers/models/qwen2/modeling_qwen2.py" l="196" s="num_key_value_groups">qwen2/modeling_qwen2.py: groups</ref><span>The ×7 this model runs, next to its own repeat_kv.</span></div></li>
-      <li><div><ref e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="187" s="repeat_kv">llama/modeling_llama.py: repeat_kv</ref><span>The reference copy with the shape contract in its docstring.</span></div></li>
+      <li><div><ref e="gptoss-120b" p="config.json" l="58" s="num_key_value_heads">config.json: 8 narrow KV heads</ref><span>64 queries over 8 heads of width 64, windowed at 128.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/gpt_oss/modeling_gpt_oss.py" l="308" s="sliding_window">gpt_oss/modeling_gpt_oss.py: per-layer window</ref><span>Sliding attention gets the window; other layers don't.</span></div></li>
+      <li><div><ref e="hf-transformers" p="src/transformers/models/gpt_oss/modeling_gpt_oss.py" l="487" s="create_sliding_window_causal_mask">gpt_oss/modeling_gpt_oss.py: the mask</ref><span>Why 73,728 B per token never multiplies past 128 positions.</span></div></li>
     </ol>
   </section>
 </div>
@@ -95,24 +97,24 @@
 
 <div class="quiz">
   <div class="q" data-answer="b">
-    <p class="q__stem">Qwen2.5-7B has 28 query heads and 4 KV heads. What is its repeat factor, and what does it multiply?</p>
+    <p class="q__stem">gpt-oss-120B has 64 query heads and 8 KV heads of width 64. What is its repeat factor, and what does it multiply?</p>
     <ol class="q__opts">
-      <li data-k="a">×4: each query head is used 4 times</li>
-      <li data-k="b">×7: each KV head is repeated 7 times to serve 28 queries</li>
-      <li data-k="c">×28: the KV cache is 28 times smaller than MHA</li>
-      <li data-k="d">×32: layers times KV heads</li>
+      <li data-k="a">×8: each query head is used 8 times</li>
+      <li data-k="b">×8: each KV head is repeated 8 times to serve 64 queries</li>
+      <li data-k="c">×64: the KV cache is 64 times smaller than MHA</li>
+      <li data-k="d">×36: layers times KV heads</li>
     </ol>
-    <div class="q__why">28 / 4 = 7, applied to keys and values before the matmul. The cache saving versus 28 KV heads is 7x; the repeat itself is nearly free arithmetic.</div>
+    <div class="q__why">64 / 8 = 8, applied to keys and values before the matmul. Narrow heads (64, not 128) halve the bytes a second time — two halvings stacked.</div>
   </div>
   <div class="q" data-answer="c">
-    <p class="q__stem">How many KV bytes does one Mistral-7B token occupy in bf16?</p>
+    <p class="q__stem">How many KV bytes does one gpt-oss-120B token occupy in bf16, and how far do they multiply?</p>
     <ol class="q__opts">
-      <li data-k="a">57,344 B</li>
-      <li data-k="b">73,728 B</li>
-      <li data-k="c">131,072 B</li>
-      <li data-k="d">376,832 B</li>
+      <li data-k="a">57,344 B across the full context</li>
+      <li data-k="b">131,072 B across the full context</li>
+      <li data-k="c">73,728 B, never past 128 positions</li>
+      <li data-k="d">376,832 B across the full context</li>
     </ol>
-    <div class="q__why">2 × 32 layers × 8 heads × 128 × 2 B = 131,072 B. The 57,344 B answer is Qwen2.5-7B; 376,832 B is 92-layer GLM-4.5.</div>
+    <div class="q__why">2 × 36 layers × 8 heads × 64 × 2 B = 73,728 B, and the 128-token window caps the multiplication. Small heads times a short window.</div>
   </div>
   <div class="q" data-answer="a">
     <p class="q__stem">DeepSeek-V4.1-Flash runs 64 query heads over 1 KV head. What does that imply?</p>
@@ -133,6 +135,16 @@
       <li data-k="d">They cache a low-rank latent, not per-head keys and values</li>
     </ol>
     <div class="q__why">DeepSeek-V2-Lite's 16 KV heads never materialize as a cache; the 512-number latent does. Chapter 8 weighs it: 31,104 B per token across 27 layers.</div>
+  </div>
+  <div class="q" data-answer="b">
+    <p class="q__stem">From chapter 1: one Qwen2.5-7B block holds about 233.0M weights. How much of that is attention?</p>
+    <ol class="q__opts">
+      <li data-k="a">203.7M — the MLP is the minority</li>
+      <li data-k="b">29.4M — the MLP dominates at 203.7M</li>
+      <li data-k="c">116.5M — attention and MLP split evenly</li>
+      <li data-k="d">57,344 — the KV bytes, not weights</li>
+    </ol>
+    <div class="q__why">29.4M attention against 203.7M feed-forward — which is why later chapters put experts, sparsity and narrow formats in the MLP first. Option d confuses bytes with weights.</div>
   </div>
 </div>
 

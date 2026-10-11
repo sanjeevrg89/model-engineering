@@ -1,80 +1,69 @@
 import { mountScope } from "../../assets/js/scope.js";
 
 // One decode step's KV read for 1,024 cached tokens, layer by layer.
-//   Mistral-7B (A): 32 layers, 8 KV heads × 128 × 2 (K/V) × 2 B = 4,096 B per
-//     layer per token → 4 MiB per layer for 1,024 tokens; 128 MiB total.
-//   Qwen2.5-7B (B): 28 layers, 4 KV heads × 128 × 2 × 2 B = 2,048 B per layer
-//     per token → 2 MiB per layer for 1,024 tokens; 56 MiB total.
-// qwen25-7b config.json l15-17, mistral-7b config.json l13-15.
-const TOKENS = 1024;
-const A = { layers: 32, mibPerLayer: 4, totalMib: 128, perTok: 4096 };
-const B = { layers: 28, mibPerLayer: 2, totalMib: 56, perTok: 2048 };
+//   Qwen3-8B (A): 36 layers, 8 KV heads × 128 × 2 (K/V) × 2 B = 4,096 B per
+//     layer per token → 4 MiB per layer for 1,024 tokens; 144 MiB total.
+//   gpt-oss-120B (B): 36 layers, 8 KV heads × 64 × 2 × 2 B = 2,048 B per layer
+//     per token, but the 128-token window reads only 128 of the 1,024 cached
+//     tokens → 0.25 MiB per layer; 9 MiB total.
+// qwen3-8b config.json l17-19, gptoss-120b config.json l55-58, l9, l82.
+const A = { layers: 36, mibPerLayer: 4, totalMib: 144, perTok: 4096, tokens: 1024 };
+const B = { layers: 36, mibPerLayer: 0.25, totalMib: 9, perTok: 2048, tokens: 128 };
 
 function build() {
-  const cuts = [0, 8, 16, 24, 28, 32];
+  const cuts = [0, 12, 24, 36];
   const descs = [
-    "1,024 tokens cached on each side. Nothing read yet; per-layer widths differ: <b>4,096 B</b> on A, <b>2,048 B</b> on B.",
-    "Layers 1–8 read on both sides: <b>32 MiB</b> on A, <b>16 MiB</b> on B. Same operation, half the width.",
-    "Layers 9–16: <b>64 MiB</b> against <b>32 MiB</b>. The gap is the head count, 8 vs 4, times identical depth so far.",
-    "Layers 17–24: <b>96 MiB</b> against <b>48 MiB</b>. B has 4 layers left; A has 8.",
-    "Layers 25–28: B reads its last layer and finishes at <b>56 MiB</b>. A stands at 112 MiB with 4 layers to go.",
-    "Layers 29–32 run on A alone: 16 MiB more, <b>128 MiB</b> total. Depth is a second knob beside width.",
-    "Totals for one step over 1,024 tokens: <b>128 MiB</b> on A, <b>56 MiB</b> on B. Chapter 6.3 multiplies this to full context.",
+    "1,024 tokens cached on each side. A reads <b>all of them</b>; B's 128-token window reads <b>128</b>. Per-layer widths: <b>4,096 B</b> on A, <b>2,048 B</b> on B.",
+    "Layers 1–12: <b>48 MiB</b> on A, <b>3 MiB</b> on B. Narrow heads halve it; the window quarters it again.",
+    "Layers 13–24: <b>96 MiB</b> against <b>6 MiB</b>. Same 36 layers each — depth is no longer the difference.",
+    "Layers 25–36: A finishes at <b>144 MiB</b>, B at <b>9 MiB</b> — a 16x gap from heads, width and window combined.",
   ];
-  const steps = cuts.map((c, i) => {
-    const aDone = Math.min(c, A.layers);
-    const bDone = Math.min(c, B.layers);
+  return cuts.map((c, i) => {
     const step = {
       caption: descs[i],
-      state: { aDone, bDone },
+      state: { aDone: c, bDone: c },
       notes: {
-        a: `<b>${aDone * A.mibPerLayer} MiB</b> over ${aDone} layers`,
-        b: `<b>${bDone * B.mibPerLayer} MiB</b> over ${bDone} layers`,
+        a: `<b>${c * A.mibPerLayer} MiB</b> over ${c} layers × 1,024 tokens`,
+        b: `<b>${c * B.mibPerLayer} MiB</b> over ${c} layers × 128 tokens`,
       },
       hold: 3000,
     };
-    if (i === 0) step.same = "Same workload, different widths.";
-    if (i === 4) step.delta = "B finishes at 28 layers; A keeps reading.";
-    if (i === 5) step.delta = "A's extra depth reads alone.";
-    if (i === 6) step.same = "Both totals are one formula: layers × heads × width.";
+    if (i === 0) step.same = "Same cached past, different reads.";
+    if (i === 3) step.delta = "16x less traffic: half the heads' width, one eighth of the tokens.";
     return step;
   });
-  return steps;
 }
 
 function layerDraw(cfg, name) {
   return (r, s, ctx) => {
     const W = 740;
-    r.text("head", { x: 0, y: 14, class: "t-label" }, `${name} · ${cfg.perTok.toLocaleString("en-US")} B per layer per token`);
+    r.text("head", { x: 0, y: 14, class: "t-label" }, `${name} · ${cfg.perTok.toLocaleString("en-US")} B per layer per token · reads ${cfg.tokens} tokens`);
     const n = cfg.layers;
     const bw = W / n;
-    for (let i = 0; i < n; i++) {
-      const done = i < (name.startsWith("A") ? s.aDone : s.bDone);
-      const g = r.g("lay" + i, i * bw, 26);
-      g.rect("r", { width: Math.max(1, bw - 1.5), height: 46, rx: 2, class: done ? (name.startsWith("A") ? "s-a-solid" : "s-b-solid") : "s-panel" });
-    }
     const done = name.startsWith("A") ? s.aDone : s.bDone;
-    r.text("tot", { x: 0, y: 100, class: "t-mono t-sm" }, `${done}/${n} layers`);
-    r.text("mib", { x: W, y: 100, class: "t-mono t-bold t-end" }, `${done * cfg.mibPerLayer} MiB`);
-    const frac = done / n;
-    const bg = r.g("bar", 0, 110);
-    bg.rect("r", { width: W, height: 12, rx: 3, class: "s-sunk" });
-    if (frac > 0) {
-      const fg = r.g("fill", 0, 110);
-      fg.rect("r", { width: Math.max(2, W * frac), height: 12, rx: 3, class: name.startsWith("A") ? "s-a" : "s-b" });
+    for (let i = 0; i < n; i++) {
+      const g = r.g("lay" + i, i * bw, 26);
+      g.rect("r", { width: Math.max(1, bw - 1.5), height: 46, rx: 2, class: i < done ? (name.startsWith("A") ? "s-a-solid" : "s-b-solid") : "s-panel" });
     }
-    r.text("foot", { x: 0, y: 142, class: "t-xs t-dim" }, `1,024 tokens × ${cfg.layers} layers · total ${cfg.totalMib} MiB`);
+    r.text("tot", { x: 0, y: 100, class: "t-mono t-sm" }, `${done}/${n} layers`);
+    const mib = done * cfg.mibPerLayer;
+    r.text("mib", { x: W, y: 100, class: "t-mono t-bold t-end" }, `${Number.isInteger(mib) ? mib : mib.toFixed(2)} MiB`);
+    const fg = r.g("fill", 0, 110);
+    fg.rect("r", { width: W, height: 12, rx: 3, class: "s-sunk" });
+    const bg = r.g("bar", 0, 110);
+    bg.rect("r", { width: Math.max(2, (W * done) / n), height: 12, rx: 3, class: name.startsWith("A") ? "s-a" : "s-b" });
+    r.text("foot", { x: 0, y: 142, class: "t-xs t-dim" }, `${cfg.tokens.toLocaleString("en-US")} tokens read × ${cfg.layers} layers · total ${cfg.totalMib} MiB`);
   };
 }
 
 mountScope("#fig-6-1", {
   label: "Fig 6.1",
-  title: "One step's KV read for 1,024 cached tokens, layer by layer",
+  title: "One step's KV read: full 1,024 against windowed 128",
   width: 760,
   channels: [
-    { key: "a", name: "Mistral-7B", sub: "8 KV heads, 32 layers", height: 158 },
-    { key: "b", name: "Qwen2.5-7B", sub: "4 KV heads, 28 layers", height: 158 },
+    { key: "a", name: "Qwen3-8B", sub: "8 KV heads, full context", height: 158 },
+    { key: "b", name: "gpt-oss-120B", sub: "8 narrow heads, window 128", height: 158 },
   ],
   build,
-  draw: { a: layerDraw(A, "A · Mistral-7B"), b: layerDraw(B, "B · Qwen2.5-7B") },
+  draw: { a: layerDraw(A, "A · Qwen3-8B"), b: layerDraw(B, "B · gpt-oss-120B") },
 });

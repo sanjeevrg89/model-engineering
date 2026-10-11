@@ -28,6 +28,13 @@ it. Both run the same workload on the same clock. Name them per figure
 (`{ key: "a", name: "Qwen2.5-7B", sub: "dense GQA" }`); the letters A/B belong to
 the figure, not to a fixed vendor.
 
+**Flagship-first.** Openings lead from the 2026 frontier, not from history: name
+the flagship behavior first, then introduce the older model as the minimal case
+that proves the mechanism. Small dense models stay as teaching vehicles where
+the mechanism needs them (one clean block, one flat router), but they never own
+the headline. If a chapter's contrast is inherently historical (dense vs MoE),
+say so in the opening and bridge forward to the flagship in the takeaways.
+
 **Reference setups.** Never use a toy config as the real example. Every example is
 a roster config, and every chapter names its two runners:
 
@@ -124,7 +131,11 @@ In this order (headings are `<h2 id="…"><span class="h-num">N.M</span>Title</h
 the ids feed the section map):
 
 1. **Opening** (no heading): 1–2 paragraphs that pick up the previous chapter's closing
-   question and say what this chapter shows. No "In this chapter we will".
+   question and say what this chapter shows, flagship first. No "In this chapter we will".
+2. **Objectives box**: `<div class="tldr">` with a 2-minute version (2–3 sentences a
+   hurried reader keeps) and an `obj` line of 3 concrete capabilities ("After this
+   chapter you can: …"). Write it last; it must stay true if the reader skips everything
+   between it and the quiz.
 2. **The main figure** early, usually right after the first section's first paragraph:
    a two-channel scope (§7) running one workload through the incumbent and the challenger.
 3. **Explanation sections** (3–6): mechanism first, then each design's version, with
@@ -132,7 +143,11 @@ the ids feed the section map):
 4. **Build it** (`id="lab"`) if the chapter has a lab.
 5. **Read the real code** (`id="read"`): a two-column reading list, 3–5 items per side,
    ordered as a reading path, each with one sentence on what to look for.
-6. **Check yourself** (`id="check"`): 3–4 multiple-choice questions with explanations.
+6. **Check yourself** (`id="check"`): 3–4 multiple-choice questions with explanations,
+   plus one retrieval question from an earlier chapter (every chapter except chapter 1).
+   Retrieval questions start "From chapter N:" and re-test a number or mechanism the
+   current chapter builds on. Each explanation teaches something, including the wrong
+   answers' appeal.
 7. **Takeaways**: 3–5 bullets.
 
 Target length: 2,500–4,500 words of prose, 1 main scope, 1–3 secondary figures,
@@ -168,15 +183,22 @@ lines of it. The label defaults to `file.py:line`.
 **Placeholders**: `{{<source>.tag}}`, `{{<source>.commit}}`, `{{<source>.short}}` (7-char
 commit) and `{{<source>.name}}` for any key in `course.json` → `sources`.
 
-**Spec sheet** (the side-by-side comparison; one per chapter):
+**Spec sheet** (the side-by-side comparison; one per chapter). The sheet is
+reference layer, not core path: wrap it in progressive disclosure so the chapter
+reads in 15 minutes with it closed:
 ```html
+<details class="ref-layer wide"><summary><span class="label">Spec sheet N.1</span>Short title (reference)</summary>
 <div class="sheet wide"><table>
   <caption><span class="label">Spec sheet N.1</span>Short title</caption>
   <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>Qwen2.5-7B</th>
     <th class="chb"><span class="badge badge--b">B</span>Mistral-7B-v0.1</th></tr></thead>
   <tbody><tr><th>Row label</th><td>… <ref …></ref></td><td>…</td></tr></tbody>
 </table></div>
+</details>
 ```
+The compare page gathers sheets by matching `<div class="sheet">`, so the wrapper
+must not disturb the inner div. Numbers strips, formulas and takeaways stay on the
+core path and are never wrapped.
 When both designs agree, span the two value cells:
 `<tr><th>Row label</th><td class="same" colspan="2">…</td></tr>`.
 
@@ -272,5 +294,9 @@ Done means all of these hold:
 - [ ] No console errors; no horizontal page scroll at 390 px.
 - [ ] Lab: skeleton fails with readable messages; solution passes locally
       (`LAB_SOLUTION=1 uv run pytest labs/<dir>`) and in the browser (`labrun.mjs`).
-- [ ] Quiz answers are correct and each explanation teaches something.
+- [ ] Quiz answers are correct and each explanation teaches something. Every chapter
+      after chapter 1 carries one retrieval question from an earlier chapter.
+- [ ] The tldr box is true for a reader who skips to the quiz; objectives name
+      capabilities, not topics. Spec sheets sit inside `details.ref-layer`.
+- [ ] Openings lead from the frontier; older models appear as minimal cases, never headlines.
 - [ ] Prose read once end to end for voice (§3) and for anything unverified.

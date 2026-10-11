@@ -1,4 +1,6 @@
-<p>Mixtral woke 2 of 8 big experts. DeepSeek-V3 wakes 8 of 256 small ones, routes them in groups, and keeps one shared expert on for every token. This chapter runs Mixtral's coarse block against V3's fine-grained one: smaller experts, group-constrained routing, and the first 3 layers left dense.</p>
+<p>Mixtral woke 2 of 8 big experts. DeepSeek-V3 wakes 8 of 256 small ones, routes them in groups, and keeps one shared expert on for every token — and Kimi-K3 triples the design again to 896. This chapter runs Mixtral's coarse block against V3's fine-grained one: smaller experts, group-constrained routing, and the first 3 layers left dense.</p>
+
+<div class="tldr"><span class="label">The 2-minute version</span><p>256 small experts (44M each) with 8 active per token in ≤4 of 8 groups, one shared expert always on, sigmoid scoring, no auxiliary loss, first 3 layers dense. Same per-token spend as coarse MoE (~396M vs ~394M per layer) for 32x the expert count.</p><span class="obj">After this chapter you can: compute active MLP with shared experts · explain group-constrained routing · say why no flagship routes from layer zero.</span></div>
 
 <h2 id="fine"><span class="h-num">12.1</span>Two hundred fifty-six small experts</h2>
 
@@ -27,6 +29,7 @@
 
 <p>The first 3 of 61 layers are dense <ref e="dsv3" p="config.json" l="15" s="first_k_dense_replace"></ref> <ref e="dsv3" p="config.json" l="31" s="num_hidden_layers"></ref>: every token passes through full feed-forwards before any routing happens. Early layers learn the general representations every later expert builds on, and dense layers can't collapse into imbalance. GLM-4.5 makes the same call at 3 of 92 <ref e="glm45" p="config.json" l="30" s="first_k_dense_replace"></ref> <ref e="glm45" p="config.json" l="31" s="num_hidden_layers"></ref>; Kimi-K3 at 1 of 93. The fraction shrinks as the model grows, but no flagship routes from layer zero.</p>
 
+<details class="ref-layer wide"><summary><span class="label">Spec sheet 12.1</span>Coarse against fine-grained MoE (reference)</summary>
 <div class="sheet wide"><table>
   <caption><span class="label">Spec sheet 12.1</span>Coarse against fine-grained MoE</caption>
   <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>Mixtral-8x7B-v0.1</th><th class="chb"><span class="badge badge--b">B</span>DeepSeek-V3</th></tr></thead>
@@ -40,6 +43,7 @@
     <tr><th>Active MLP per layer</th><td>352.3M</td><td>396.4M</td></tr>
   </tbody>
 </table></div>
+</details>
 
 <h2 id="lab"><span class="h-num">12.4</span>Build it</h2>
 
@@ -112,6 +116,16 @@
       <li data-k="d">The shared count is a design choice: 2 in V2-Lite, 1 in V3, Kimi-K2 and GLM-4.5</li>
     </ol>
     <div class="q__why">n_shared_experts is 2 in V2-Lite's config and 1 in its successors. More shared capacity means less pressure on routing — at the cost of always-on arithmetic.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">From chapter 11: Mixtral's router keeps top-2 weights and renormalizes them. Why?</p>
+    <ol class="q__opts">
+      <li data-k="a">To balance load across experts</li>
+      <li data-k="b">To add jitter during inference</li>
+      <li data-k="c">So the kept weights sum to 1 and the output stays on scale</li>
+      <li data-k="d">To select which layers route</li>
+    </ol>
+    <div class="q__why">The dropped experts took probability mass with them. V3 renormalizes its top-8 the same way (norm_topk_prob) — dropping mass must never shrink outputs.</div>
   </div>
 </div>
 

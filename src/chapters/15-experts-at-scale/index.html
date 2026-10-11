@@ -1,5 +1,7 @@
 <p>DeepSeek-V3 woke 8 of 256 experts. Kimi-K3 wakes 16 of 896, plus 2 shared, across 93 layers with 2.8 trillion resident weights. This chapter runs V3's routing against K3's: what changes when the expert count triples again, what MXFP4 packing does to resident memory, and why every rank must stay loaded.</p>
 
+<div class="tldr"><span class="label">The 2-minute version</span><p>896 routed experts with 16 active plus 2 shared: 1.8% awake, flat top-16, MXFP4-packed to fit 2.8T. Per-token spend holds flat across generations while capacity multiplies; everything stays resident because any token can pick any expert.</p><span class="obj">After this chapter you can: read trillion-scale MoE counts from a config · explain MXFP4 residency · say why offloading experts breaks serving.</span></div>
+
 <h2 id="scale"><span class="h-num">15.1</span>Eight hundred ninety-six experts</h2>
 
 <figure id="fig-15-1"></figure>
@@ -21,6 +23,7 @@
   <div><span class="v">2,800<small>B</small> / 104<small>B</small></span><span class="d">resident / active parameters, Artificial Analysis max variant, cited</span></div>
 </div>
 
+<details class="ref-layer wide"><summary><span class="label">Spec sheet 15.1</span>Fine-grained against trillion-scale MoE (reference)</summary>
 <div class="sheet wide"><table>
   <caption><span class="label">Spec sheet 15.1</span>Fine-grained against trillion-scale MoE</caption>
   <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>DeepSeek-V3</th><th class="chb"><span class="badge badge--b">B</span>Kimi-K3</th></tr></thead>
@@ -33,6 +36,7 @@
     <tr><th>Context</th><td>163,840</td><td>1,048,576 <ref e="kimi-k3" p="config.json" l="171" s="max_position_embeddings"></ref></td></tr>
   </tbody>
 </table></div>
+</details>
 
 <h2 id="read"><span class="h-num">15.3</span>Read the real code</h2>
 
@@ -98,6 +102,16 @@
       <li data-k="d">Artificial Analysis charts, cited as their numbers</li>
     </ol>
     <div class="q__why">Configs don't total themselves. Third-party totals are cited as scores with the publisher named — never as config facts.</div>
+  </div>
+  <div class="q" data-answer="b">
+    <p class="q__stem">From chapter 12: V3 wakes 8 of 256 routed experts (3.1%). Kimi-K3 wakes 16 of 896 — what share?</p>
+    <ol class="q__opts">
+      <li data-k="a">25% — the Mixtral share</li>
+      <li data-k="b">About 1.8% — finer still, at roughly flat per-token spend</li>
+      <li data-k="c">50% — half the pool runs</li>
+      <li data-k="d">0.1% — only the shared experts run</li>
+    </ol>
+    <div class="q__why">16 / 896 ≈ 1.8%. Each generation wakes a smaller share while spending about the same per token — capacity multiplies, cost doesn't.</div>
   </div>
 </div>
 

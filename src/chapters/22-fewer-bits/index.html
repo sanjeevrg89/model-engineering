@@ -1,5 +1,7 @@
 <p>One billion parameters weigh 2 GB in bf16, 1 GB in FP8, half a GB in MXFP4. The roster lives in all three: bf16 baselines from 2023, FP8 flagships in GLM-5.3 and V4.1-Flash, MXFP4 experts in gpt-oss-120B and Kimi-K3. This chapter weighs the same billion params three ways on channel A against B, then reads what each config actually records: format, block size, and what stays unconverted.</p>
 
+<div class="tldr"><span class="label">The 2-minute version</span><p>2, 1, 0.5 bytes per number: bf16 baselines, FP8 flagships, MXFP4 experts — with disk bytes corroborating. Read every quantization config as two decisions: how narrow, and what escapes. Bits price memory; benchmarks price answers.</p><span class="obj">After this chapter you can: convert any param count to resident bytes per format · read block sizes and exception lists · halve any cache receipt by precision.</span></div>
+
 <h2 id="three-weights"><span class="h-num">22.1</span>Same params, three weights</h2>
 
 <figure id="fig-22-1"></figure>
@@ -15,7 +17,7 @@
 <excerpt e="dsv41-flash" p="config.json" l="12-16" hl="13" s="quant_method" title="V4.1-Flash: dynamic FP8, 32-wide blocks"></excerpt>
 </div>
 
-<p>MXFP4 goes in the experts. gpt-oss-120B converts everything except attention, the router, embeddings and the head — the4-bit frontier with named exceptions:</p>
+<p>MXFP4 goes in the experts. gpt-oss-120B converts everything except attention, the router, embeddings and the head — the 4-bit frontier with named exceptions:</p>
 
 <excerpt e="gptoss-120b" p="config.json" l="62-69" hl="63,69" s="mxfp4" title="gpt-oss: MXFP4 except attention, router, embeddings, head"></excerpt>
 
@@ -109,6 +111,16 @@
       <li data-k="d">28,672 B — half the bytes, same arithmetic as weights</li>
     </ol>
     <div class="q__why">Bytes halve with precision everywhere, cache included. Whether an engine offers it is serving configuration — chapter 29.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">From chapter 20: GLM-5.3's latent cache is 89,856 B per token in bf16. In FP8 it would be?</p>
+    <ol class="q__opts">
+      <li data-k="a">89,856 B — latents can't narrow</li>
+      <li data-k="b">179,712 B — narrowing doubles traffic</li>
+      <li data-k="c">44,928 B — half the bytes, same latent</li>
+      <li data-k="d">2,048 B — the index_topk count</li>
+    </ol>
+    <div class="q__why">78 × 576 × 1 B = 44,928 B. Precision halves every byte count in the course — weights, latents, caches alike.</div>
   </div>
 </div>
 

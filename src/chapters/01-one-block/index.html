@@ -1,6 +1,8 @@
-<p>Strip a dozen flagship models down to one layer and the same shape keeps showing up: normalize, attend with shared key heads, normalize again, feed through a gated projection, add what came in. Mistral-7B established it in the open in 2023, Qwen2.5-7B refined it in 2024, and every mixture-of-experts, latent-attention and hybrid model in this course starts from it before adding its own idea.</p>
+<p>Kimi-K3 stacks it 93 times at 2.8 trillion weights. Mistral-7B stacks it 32 times at 7 billion. Strip a dozen flagship models down to one layer and the same shape keeps showing up: normalize, attend with shared key heads, normalize again, feed through a gated projection, add what came in. Mistral-7B established it in the open in 2023, Qwen2.5-7B refined it in 2024, and every mixture-of-experts, latent-attention and hybrid model in this course starts from it before adding its own idea.</p>
 
 <p>This chapter runs one token vector through that block twice: once with Qwen2.5-7B's dimensions on channel A, once with Mistral-7B-v0.1's on channel B. You will see what RMSNorm does, how 4 key heads serve 28 query heads, why Mistral stops looking past 4,096 tokens, and what one block costs in weights. The next chapters vary each piece.</p>
+
+<div class="tldr"><span class="label">The 2-minute version</span><p>Every model since ChatGPT stacks one decoder block: RMSNorm, grouped-query attention, RMSNorm, SwiGLU feed-forward, two residuals. Qwen2.5-7B and Mistral-7B differ only in widths, head counts and window — and the 2026 flagships are the same block with fancier attention and experts bolted on.</p><span class="obj">After this chapter you can: read heads, layers and widths from any config · compute KV bytes and block weights by hand · explain why the MLP dominates every block.</span></div>
 
 <h2 id="shared"><span class="h-num">1.1</span>The block both models share</h2>
 
@@ -64,6 +66,7 @@
 
 <p>The config agrees: 8 local experts, 2 per token <ref e="mixtral-8x7b" p="config.json" l="18" s="num_local_experts"></ref> <ref e="mixtral-8x7b" p="config.json" l="15" s="num_experts_per_tok"></ref>. One token touches about 394M weights per layer instead of 218M, while the checkpoint holds all eight experts resident. That gap between active and resident parameters is Part III's whole subject, starting with chapter 11.</p>
 
+<details class="ref-layer wide"><summary><span class="label">Spec sheet 1.1</span>One block in the two runners (reference)</summary>
 <div class="sheet wide"><table>
   <caption><span class="label">Spec sheet 1.1</span>One block in the two runners</caption>
   <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>Qwen2.5-7B {{qwen25-7b.tag}}</th><th class="chb"><span class="badge badge--b">B</span>Mistral-7B-v0.1 {{mistral-7b.tag}}</th></tr></thead>
@@ -78,6 +81,7 @@
     <tr><th>RoPE theta</th><td>1,000,000.0 <ref e="qwen25-7b" p="config.json" l="19" s="rope_theta"></ref></td><td>10,000.0 <ref e="mistral-7b" p="config.json" l="17" s="rope_theta"></ref></td></tr>
   </tbody>
 </table></div>
+</details>
 
 <p>The thetas differ by 100x and the windows differ by 32x. Both are position stories, and positions are next: how a model knows token 100,000 comes after token 99,999, and what changed to make that true.</p>
 

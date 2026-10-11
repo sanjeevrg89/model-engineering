@@ -1,5 +1,7 @@
 <p>Gated DeltaNet forgets with one scalar per head. Kimi Delta Attention forgets per channel: every feature dimension gets its own decay rate, learned beside the update. Kimi-K3 runs that mechanism across 69 linear layers with NoPE MLA layers every fourth position. This chapter updates one memory row twice: scalar gating on channel A, channel-wise decay on channel B.</p>
 
+<div class="tldr"><span class="label">The 2-minute version</span><p>One gate per head becomes one decay per feature channel: finer forgetting over the same fixed-size memory. Kimi-K3 pairs 69 KDA layers with NoPE MLA every fourth layer — position rides the recurrence, retrieval re-anchors periodically.</p><span class="obj">After this chapter you can: contrast scalar and channel-wise gating · explain NoPE MLA · read the 3:1 hybrid split from full_attn_layers.</span></div>
+
 <h2 id="decay"><span class="h-num">18.1</span>One gate per head, one gate per channel</h2>
 
 <figure id="fig-18-1"></figure>
@@ -31,6 +33,7 @@
 
 <p>The full-attention list runs 4, 8, 12, … 92, 93 <ref e="kimi-k3" p="config.json" l="67" s="full_attn_layers"></ref>: 24 NoPE MLA layers spaced through 69 KDA layers, a uniform 3:1 ratio the paper's ablations select over 1:1 (same quality, more cost) and 7:1 (worse validation). The recurrent layers compress history into fixed state; every fourth layer re-anchors retrieval to individual cached tokens. KV growth concentrates in those 24 layers — 27,648 latent bytes per token in bf16 from chapter 8's lab — while the other 69 hold constant memory at any context length.</p>
 
+<details class="ref-layer wide"><summary><span class="label">Spec sheet 18.1</span>Scalar gating against channel-wise decay (reference)</summary>
 <div class="sheet wide"><table>
   <caption><span class="label">Spec sheet 18.1</span>Scalar gating against channel-wise decay</caption>
   <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>Gated DeltaNet (paper)</th><th class="chb"><span class="badge badge--b">B</span>Kimi Delta Attention (config)</th></tr></thead>
@@ -43,6 +46,7 @@
     <tr><th>Shipped scale</th><td>Qwen3-Next lineage (cited)</td><td>93 layers, 1M context <ref e="kimi-k3" p="config.json" l="187" s="num_hidden_layers"></ref> <ref e="kimi-k3" p="config.json" l="171" s="max_position_embeddings"></ref></td></tr>
   </tbody>
 </table></div>
+</details>
 
 <h2 id="read"><span class="h-num">18.4</span>Read the real code</h2>
 
@@ -108,6 +112,16 @@
       <li data-k="d">The Kimi Linear paper's matched-scale runs, cited as the paper's claim, with the shipped config as evidence</li>
     </ol>
     <div class="q__why">Performance claims are cited or measured, never the course's own. Papers claim; configs corroborate shape. The course never benchmarks.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">From chapter 8: Kimi-K2's latent cache is 70,272 B per token over 61 layers. Kimi-K3's full layers hold 27,648 B — over how many layers?</p>
+    <ol class="q__opts">
+      <li data-k="a">93 — every layer keeps a latent</li>
+      <li data-k="b">61 — same as Kimi-K2</li>
+      <li data-k="c">24 — the full_attn_layers list; 69 KDA layers keep fixed state</li>
+      <li data-k="d">4 — the DSpark targets</li>
+    </ol>
+    <div class="q__why">24 × 576 × 2 B = 27,648 B. Same 576-number latent as chapter 8, on fewer layers — the hybrid split from full_attn_layers.</div>
   </div>
 </div>
 

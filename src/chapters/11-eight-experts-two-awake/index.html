@@ -1,4 +1,6 @@
-<p>Positions told each token where it stands. Now the feed-forward splits in eight. Mixtral-8x7B keeps Mistral-7B's attention untouched and replaces every MLP with eight of them, waking two per token. The checkpoint holds 46.7B weights; one token touches about 12.9B. This chapter runs one token through the dense block on channel A and the routed block on channel B.</p>
+<p>Kimi-K3 wakes 16 of 896 experts per token. The idea debuted small: Mixtral-8x7B keeps Mistral-7B's attention untouched and replaces every MLP with eight experts, waking two per token. The checkpoint holds 46.7B weights; one token touches about 12.9B. This chapter runs one token through the dense block on channel A and the routed block on channel B — the minimal case of the mechanism chapter 15 runs at trillion scale.</p>
+
+<div class="tldr"><span class="label">The 2-minute version</span><p>A router scores 8 experts, keeps the top 2, renormalizes their weights, runs exactly those two, and returns the weighted sum. One token activates ~12.9B of 46.7B resident weights: capacity at constant per-token cost, memory at full cost.</p><span class="obj">After this chapter you can: trace gate → top-k → run → combine in code · compute active vs resident weights · explain why routing follows content.</span></div>
 
 <h2 id="route"><span class="h-num">11.1</span>Eight experts, two awake</h2>
 
@@ -106,6 +108,16 @@
       <li data-k="d">Only in training, when jitter noise is positive</li>
     </ol>
     <div class="q__why">The branch is guarded by self.training. Served routing is deterministic given the weights — which is exactly why serving inherits whatever imbalance training left behind.</div>
+  </div>
+  <div class="q" data-answer="a">
+    <p class="q__stem">From chapter 1: a Mistral-7B dense block holds 218.1M weights. How much of that is attention?</p>
+    <ol class="q__opts">
+      <li data-k="a">41.9M — the MLP dominates at 176.2M, which is why experts replace it</li>
+      <li data-k="b">176.2M — attention dominates the block</li>
+      <li data-k="c">109.0M — attention and MLP split evenly</li>
+      <li data-k="d">131,072 — the KV bytes, not weights</li>
+    </ol>
+    <div class="q__why">41.9M attention against 176.2M feed-forward. MoE targets the MLP precisely because it is four-fifths of the block. Option d confuses bytes with weights.</div>
   </div>
 </div>
 

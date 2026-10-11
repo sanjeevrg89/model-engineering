@@ -1,4 +1,6 @@
-<p>Grouped-query attention shares heads. Multi-head latent attention stops storing heads at all. DeepSeek-V2-Lite compresses each token's keys and values into one 512-number latent plus a 64-number rotary key, and every head reconstructs what it needs at read time. Kimi-K2 scales the same ranks to 61 layers and 384 experts. This chapter caches one token twice: Qwen2.5-7B's grouped KV on channel A, V2-Lite's latent on channel B.</p>
+<p>Grouped-query attention shares heads. Multi-head latent attention stops storing heads at all — and Kimi-K3 and GLM-5.3 still store exactly this trick at trillion scale. It debuted in DeepSeek-V2-Lite: one 512-number latent plus a 64-number rotary key per token, with every head reconstructing what it needs at read time. Kimi-K2 scaled the same ranks to 61 layers and 384 experts. This chapter caches one token twice: Qwen2.5-7B's grouped KV on channel A, V2-Lite's latent on channel B.</p>
+
+<div class="tldr"><span class="label">The 2-minute version</span><p>MLA compresses each token's keys and values into one 512-number latent plus a 64-number rotary key, stored instead of per-head KV. Reads expand the latent per head — compute against a small cache beats streaming a big one. Same ranks from V2-Lite to Kimi-K3.</p><span class="obj">After this chapter you can: compute latent bytes from rank keys · explain why the rotary key stays decoupled · describe the expand-at-read decode saving.</span></div>
 
 <h2 id="latent"><span class="h-num">8.1</span>One latent instead of a thousand numbers</h2>
 
@@ -41,6 +43,7 @@
 
 <p>Kimi-K2 keeps V3's ranks (512 latent, 1,536 query <ref e="kimi-k2" p="config.json" l="20" s="kv_lora_rank"></ref> <ref e="kimi-k2" p="config.json" l="35" s="q_lora_rank"></ref>) and its 61 layers <ref e="kimi-k2" p="config.json" l="31" s="num_hidden_layers"></ref>, narrows to 64 query heads <ref e="kimi-k2" p="config.json" l="29" s="num_attention_heads"></ref>, and triples the routed experts to 384 <ref e="kimi-k2" p="config.json" l="26" s="n_routed_experts"></ref>. Latent bytes per token match V3 exactly at 70,272. The next step drops position embeddings from the MLA layers entirely and pairs them with linear attention — Kimi-K3, chapters 10 and 18.</p>
 
+<details class="ref-layer wide"><summary><span class="label">Spec sheet 8.1</span>The latent trick, small and large (reference)</summary>
 <div class="sheet wide"><table>
   <caption><span class="label">Spec sheet 8.1</span>The latent trick, small and large</caption>
   <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>DeepSeek-V2-Lite</th><th class="chb"><span class="badge badge--b">B</span>Kimi-K2-Instruct</th></tr></thead>
@@ -53,6 +56,7 @@
     <tr><th>First dense layers</th><td>1 <ref e="dsv2-lite" p="config.json" l="15" s="first_k_dense_replace"></ref></td><td>1 <ref e="kimi-k2" p="config.json" l="15" s="first_k_dense_replace"></ref></td></tr>
   </tbody>
 </table></div>
+</details>
 
 <h2 id="lab"><span class="h-num">8.5</span>Build it</h2>
 
@@ -127,6 +131,16 @@
       <li data-k="d">70,272 — the same 576 numbers over 61 layers</li>
     </ol>
     <div class="q__why">(512 + 64) × 2 B × 61 layers = 70,272 B. Same ranks as each other, more layers than V2-Lite's 27.</div>
+  </div>
+  <div class="q" data-answer="b">
+    <p class="q__stem">From chapter 6: gpt-oss-120B repeats each KV head 8 times. Why is its cache still small?</p>
+    <ol class="q__opts">
+      <li data-k="a">It caches a latent like MLA models</li>
+      <li data-k="b">Narrow heads (64) times a 128-token window cap the multiplication</li>
+      <li data-k="c">It has only 8 layers</li>
+      <li data-k="d">Its KV heads are shared across requests</li>
+    </ol>
+    <div class="q__why">73,728 B per token that never multiplies past 128 positions. Two halvings — head width, then window — on top of grouped heads.</div>
   </div>
 </div>
 

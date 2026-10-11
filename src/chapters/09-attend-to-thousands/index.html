@@ -1,4 +1,6 @@
-<p>Latent attention compresses what gets stored. Sparse attention cuts what gets read. DeepSeek-V3.2-Exp scores every past token with a lightweight indexer and runs full MLA over only the top 2,048; GLM-5.3 ships the same design at 753B with 32 index heads. This chapter attends over 8,192 past tokens twice: dense MLA on channel A, indexed top-k on channel B.</p>
+<p>GLM-5.3 — 753B, the top open flagship on the 2026 scoreboard — reads one quarter of its cache per step. Latent attention compresses what gets stored; sparse attention cuts what gets read. DeepSeek-V3.2-Exp proved it first: a lightweight indexer scores every past token and full MLA runs over only the top 2,048. This chapter attends over 8,192 past tokens twice: dense MLA on channel A, indexed top-k on channel B.</p>
+
+<div class="tldr"><span class="label">The 2-minute version</span><p>A cheap indexer scores all past tokens; full attention runs over the top 2,048 only. Reads shrink to one quarter while storage stays whole — selection is per query, every step. V3.2-Exp proved it, GLM-5.3 ships it at 753B.</p><span class="obj">After this chapter you can: explain why DSA saves traffic not capacity · size an indexer against the attention it gates · distinguish top-k from windows.</span></div>
 
 <h2 id="shortlist"><span class="h-num">9.1</span>Score everything, attend to thousands</h2>
 
@@ -36,6 +38,7 @@
 
 <p>V3.2-Exp is the experiment: 61 layers, 256 experts top-8, DSA over MLA <ref e="dsv32-exp" p="config.json" l="29" s="num_hidden_layers"></ref> <ref e="dsv32-exp" p="config.json" l="24" s="n_routed_experts"></ref>. GLM-5.3 is the flagship that productized it: 78 layers <ref e="glm53" p="config.json" l="200" s="num_hidden_layers"></ref>, the same 256 routed experts top-8 <ref e="glm53" p="config.json" l="195" s="n_routed_experts"></ref> <ref e="glm53" p="config.json" l="199" s="num_experts_per_tok"></ref>, the same top-2,048 selection — plus one MTP layer <ref e="glm53" p="config.json" l="202" s="num_nextn_predict_layers"></ref> and FP8 weights for chapters 21 and 22. V4.1-Flash tightens the selection further to top-512 over its compressed layers, with block-level candidates on top — chapter 21's stack.</p>
 
+<details class="ref-layer wide"><summary><span class="label">Spec sheet 9.1</span>The experiment and the flagship (reference)</summary>
 <div class="sheet wide"><table>
   <caption><span class="label">Spec sheet 9.1</span>The experiment and the flagship</caption>
   <thead><tr><th></th><th class="cha"><span class="badge badge--a">A</span>DeepSeek-V3.2-Exp</th><th class="chb"><span class="badge badge--b">B</span>GLM-5.3</th></tr></thead>
@@ -48,6 +51,7 @@
     <tr><th>Latent B per token</th><td>70,272</td><td>89,856</td></tr>
   </tbody>
 </table></div>
+</details>
 
 <h2 id="lab"><span class="h-num">9.5</span>Build it</h2>
 
@@ -91,6 +95,16 @@
       <li data-k="d">Nothing: the indexer replaces attention</li>
     </ol>
     <div class="q__why">2,048 / 8,192 = 0.25 of reads. Storage stays whole; the winners change next step. The indexer scores but never attends.</div>
+  </div>
+  <div class="q" data-answer="b">
+    <p class="q__stem">From chapter 8: V3.2-Exp's latent cache is 70,272 B per token. What two numbers multiply to it?</p>
+    <ol class="q__opts">
+      <li data-k="a">61 layers × 1,024 GQA numbers</li>
+      <li data-k="b">61 layers × 576 latent numbers × 2 B</li>
+      <li data-k="c">2,048 winners × 32 index heads</li>
+      <li data-k="d">256 experts × 274 B each</li>
+    </ol>
+    <div class="q__why">(512 + 64) × 2 B × 61 layers. The indexer decides what to read; the latent decides what reading costs.</div>
   </div>
   <div class="q" data-answer="c">
     <p class="q__stem">Why must all latents stay resident if only 2,048 are read?</p>

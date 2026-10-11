@@ -1,5 +1,7 @@
 <p>One forward pass can commit to more than one token two ways: train extra heads to predict ahead, or draft cheaply and verify once. DeepSeek-V3 trains one prediction layer; GLM-5.3 trains one; V4.1-Flash trains three and ships a 5-token speculative block called DSpark. Kimi-K2 trains zero. This chapter generates three tokens twice: three sequential target passes on channel A, draft-and-verify on channel B.</p>
 
+<div class="tldr"><span class="label">The 2-minute version</span><p>MTP trains extra futures (1–3 layers); drafting spends them at serve time by verifying cheap proposals with one target pass. Yield is a formula in acceptance rate — measured per workload, never assumed.</p><span class="obj">After this chapter you can: read prediction depths from a config · trace DSpark's block machine · compute expected yield for any acceptance rate.</span></div>
+
 <h2 id="verify"><span class="h-num">21.1</span>Draft three, verify once</h2>
 
 <figure id="fig-21-1"></figure>
@@ -102,6 +104,16 @@
       <li data-k="d">Nothing about speed follows: its efficiency comes from KDA hybrid attention and narrow experts</li>
     </ol>
     <div class="q__why">Zero prediction layers means no trained drafts, not no speed. Architectures have several dials; Kimi-K2 turns the attention and format ones instead.</div>
+  </div>
+  <div class="q" data-answer="b">
+    <p class="q__stem">From chapter 9: indexed top-k reads 2,048 of 8,192 cached tokens. Draft-and-verify reads all 3 drafts in one pass. What do both mechanisms share?</p>
+    <ol class="q__opts">
+      <li data-k="a">Both delete unselected tokens</li>
+      <li data-k="b">Both spend one expensive pass over a cheap shortlist instead of full sequential work</li>
+      <li data-k="c">Both require MXFP4 weights</li>
+      <li data-k="d">Both renormalize router weights</li>
+    </ol>
+    <div class="q__why">Shortlist, then verify: DSA shortlists positions for attention, speculation shortlists tokens for the target. The expensive pass runs once either way.</div>
   </div>
 </div>
 
