@@ -338,7 +338,7 @@ function rail(rel, currentSlug, sections = []) {
       )}</span></div><ol>${items}</ol></section>`;
     })
     .join("");
-  return `<nav class="rail" aria-label="Course chapters">${parts}<div class="rail__foot"><a href="${rel}compare/">Every spec sheet at a glance</a><a href="${rel}timeline/">Timeline</a><a href="${rel}glossary/">Glossary</a><a href="${rel}hardware/">Hardware</a><a href="${rel}capstones/">GPU capstones</a><a href="${rel}contribute/">From reader to contributor</a><a href="${rel}method/">How this course is checked</a></div></nav>`;
+  return `<nav class="rail" aria-label="Course chapters">${parts}<div class="rail__foot"><a href="${rel}compare/">Every spec sheet at a glance</a><a href="${rel}timeline/">Timeline</a><a href="${rel}zoo/">Attention zoo</a><a href="${rel}glossary/">Glossary</a><a href="${rel}hardware/">Hardware</a><a href="${rel}capstones/">GPU capstones</a><a href="${rel}contribute/">From reader to contributor</a><a href="${rel}method/">How this course is checked</a></div></nav>`;
 }
 
 function topbar(rel, crumbs) {
@@ -638,6 +638,7 @@ const EXTRA_PAGES = {
   hardware: ["Hardware the course covers", "Hardware"],
   compare: ["Every spec sheet at a glance", "At a glance"],
   timeline: ["Every architecture, year by year", "Timeline"],
+  zoo: ["The attention zoo", "Zoo"],
   capstones: ["GPU capstones", "Capstones"],
   contribute: ["From reader to contributor", "Contribute"],
 };

@@ -18,6 +18,8 @@
 
 <p>The scorer reads the same compressed representations MLA stores, so indexing adds a small scoring pass instead of a second cache. Thirty-two heads of width 128 against 64 MLA heads of width 256: the indexer is roughly an order of magnitude cheaper than the attention it gates. That ratio is the design constraint — a selector that costs as much as attention would buy nothing.</p>
 
+<p>The concurrent sibling is <a href="https://arxiv.org/abs/2502.11089" target="_blank" rel="noopener">Native Sparse Attention</a> (DeepSeek, February 2025): three paths per query — compressed coarse tokens, selected fine blocks, sliding window — trained end to end with Triton kernels, matching full attention in the paper's 27B runs. DSA shares the select-over-compressed idea with an inference-time focus; NSA adds trainability and hardware-aligned kernels. The zoo tables the family.</p>
+
 <div class="numbers">
   <div><span class="v">8,192</span><span class="d">past tokens scored in the figure</span></div>
   <div><span class="v">2,048</span><span class="d">winners that get full MLA: one quarter of the reads</span></div>

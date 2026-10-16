@@ -20,6 +20,9 @@
   <dt id="dsa">DeepSeek sparse attention (DSA)</dt>
   <dd>A lightning indexer scores every past token and full attention runs only over the top 2,048 (<code>index_topk</code>). Debuts in DeepSeek-V3.2-Exp on top of MLA. <span class="see"><a href="../ch/09-attend-to-thousands/">Chapter 9</a></span></dd>
 
+  <dt id="nsa">Native sparse attention (NSA)</dt>
+  <dd>DSA's concurrent sibling: compressed coarse tokens, selected fine blocks and a sliding window per query, trained end to end. <span class="see"><a href="../ch/09-attend-to-thousands/#indexer">Chapter 9</a> · <a href="../zoo/#sparse">Zoo</a></span></dd>
+
   <dt id="moe">Mixture of experts (MoE)</dt>
   <dd>A router sends each token to a few expert feed-forwards: top-2 of 8 in Mixtral, top-8 of 256 in DeepSeek-V3, top-4 of 128 in gpt-oss-120B, top-8 of 384 in Kimi-K2. <span class="see"><a href="../ch/11-eight-experts-two-awake/">Chapter 11</a> · <a href="../ch/12-tiny-experts/">Chapter 12</a></span></dd>
 
@@ -41,8 +44,10 @@
   <dt id="mtp">Multi-token prediction (MTP)</dt>
   <dd>Training extra heads to predict several future tokens, which also yields draft heads for speculative decoding. DeepSeek-V3 trains with it. <span class="see"><a href="../ch/21-one-pass-several-tokens/">Chapter 21</a></span></dd>
 
-  <dt id="diffusion-lm">Diffusion language model</dt>
-  <dd>Generation by iterative denoising of masked tokens with bidirectional attention, instead of left-to-right prediction. LLaDA-8B trains this way from scratch; Dream-7B starts from autoregressive weights. No KV cache to reuse. <span class="see"><a href="../ch/25-denoise-dont-predict/">Chapter 25</a> · <a href="../ch/26-start-from-a-talker/">Chapter 26</a></span></dd>
+  <dt id="speculative">Speculative decoding</dt>
+  <dd>Draft cheaply, verify once with the target: separate drafters, Medusa/EAGLE draft heads, or DSpark blocks. Yield is a formula in acceptance rate. <span class="see"><a href="../ch/21-one-pass-several-tokens/#verify">Chapter 21</a> · <a href="../zoo/#drafting">Zoo</a></span></dd>
+
+  <dt id="diffusion-lm">Diffusion language model</dt>  <dd>Generation by iterative denoising of masked tokens with bidirectional attention, instead of left-to-right prediction. LLaDA-8B trains this way from scratch; Dream-7B starts from autoregressive weights. No KV cache to reuse. <span class="see"><a href="../ch/25-denoise-dont-predict/">Chapter 25</a> · <a href="../ch/26-start-from-a-talker/">Chapter 26</a></span></dd>
 
   <dt id="kv-cache">KV cache</dt>
   <dd>The keys and values past tokens leave behind: 57,344 B per token for Qwen2.5-7B, 131,072 B for Mistral-7B and Mixtral-8x7B in bf16. MLA and hybrid models keep latents or fixed states instead. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a> · <a href="../ch/20-budget-every-state/">Chapter 20</a></span></dd>

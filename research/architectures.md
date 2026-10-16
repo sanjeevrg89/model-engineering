@@ -164,6 +164,28 @@ Gemma 3 27B, Nemotron Nano 30B.
   4 full-context source layers (kv_source_layer_ids at 106), index_topk 512 (124),
   3 MTP layers (145), DSpark speculative block of 5 (146), FP8 (13), 1M context (43).
 
+## Attention papers behind the zoo
+
+- NSA (DeepSeek, Feb 2025): https://arxiv.org/abs/2502.11089 — compressed coarse,
+  selected fine, sliding window; natively trainable; Triton kernels.
+- Medusa: https://arxiv.org/abs/2401.10774 — extra decoding heads + tree
+  attention; 2.2–2.8x claimed.
+- EAGLE: https://arxiv.org/abs/2401.15077 — feature autoregression with sampled
+  token fed back; ~0.8 draft accuracy claimed. EAGLE-2 (dynamic trees):
+  https://arxiv.org/abs/2406.16858.
+- RetNet: https://arxiv.org/abs/2307.08621 — multi-scale retention, parallel /
+  recurrent / chunkwise forms.
+- GLA: https://arxiv.org/abs/2312.06635 — data-dependent forget gates,
+  chunkwise for tensor cores.
+- YaRN: https://arxiv.org/abs/2309.00071 — NTK-by-parts RoPE extension to 128k.
+- ALiBi: https://arxiv.org/abs/2108.12409 — per-head linear distance penalty,
+  no embeddings.
+- StreamingLLM + sinks: https://github.com/mit-han-lab/streaming-llm —
+  window plus pinned initial tokens to 4M.
+- Hyena: https://arxiv.org/abs/2302.10866 — long implicit convolutions.
+- Kimi Linear: https://arxiv.org/abs/2510.26692 — KDA + NoPE MLA, 3:1 hybrid.
+- RWKV history: project wiki (V1–V8, DeepEmbed, ROSA).
+
 ## Explainers the course leans on
 
 - Raschka, "LLM Architecture Gallery" + "Hybrid Attention" + "Visual Guide to

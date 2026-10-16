@@ -50,6 +50,8 @@
 
 <p><code>scripts/fetch-sources.mjs</code> makes a shallow clone of every code repository at exactly its pinned commit, and downloads the listed model files at exactly their revision, into <code>.cache/src/</code>.</p>
 
+<p>Scope, stated once: <em>model</em> in this course means decoder-era language models from November 2022 on — the architectures that serve chat, code, agents and reasoning today. Encoder-only and encoder-decoder classics (BERT, T5), convolutional vision backbones and GAN image generators are out of scope, not oversights: they predate the course's window or belong to other tracks. Within the window, the course pins what it can fetch and cites the rest as deltas; the <a href="../zoo/">attention zoo</a> maps every variant to one of those three statuses.</p>
+
 <h2 id="refs"><span class="h-num">2</span>References are verified by the build</h2>
 
 <p>Chapters never paste source code by hand. They use two build-time tags:</p>

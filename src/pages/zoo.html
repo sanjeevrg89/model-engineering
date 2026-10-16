@@ -1,0 +1,108 @@
+<header class="ch-head">
+  <div class="ch-head__eyebrow"><span class="label">Reference</span></div>
+  <h1>The attention zoo</h1>
+  <p class="ch-head__dek">Every attention variant that matters since 2022, one line each: what it does, whether this course pins it, cites it or scopes it out, and where to read more. Share this page; argue with it via the issue form.</p>
+  <rev-block></rev-block>
+</header>
+
+<p>Status key: <strong>pinned</strong> means a roster config or the pinned Transformers tree demonstrates it and the course quotes the lines. <strong>Cited</strong> means the course states the paper's or release's claims with attribution and never its config values. <strong>Out of scope</strong> means pre-2022 classics or other tracks, named so the map has no silent gaps. Paper numbers below are the papers' own reported figures.</p>
+
+<h2 id="positional"><span class="h-num">1</span>Positions</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>Variant</th><th>Mechanism in one line</th><th>Status</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>RoPE</td><td>Rotate queries and keys by position; theta sets the longest wavelength</td><td>pinned (theta 10k–5M)</td><td><a href="../ch/03-where-am-i/">Ch 3</a></td></tr>
+<tr><td>YaRN</td><td>NTK-by-parts RoPE rescaling plus temperature fix; 4k → 128k on ~0.1% retraining</td><td>cited (<a href="https://arxiv.org/abs/2309.00071" target="_blank" rel="noopener">arXiv:2309.00071</a>)</td><td><a href="../ch/03-where-am-i/">Ch 3</a></td></tr>
+<tr><td>ALiBi</td><td>No embeddings; per-head linear penalty on distance, recency bias built in</td><td>cited (<a href="https://arxiv.org/abs/2108.12409" target="_blank" rel="noopener">arXiv:2108.12409</a>)</td><td><a href="../ch/03-where-am-i/">Ch 3</a></td></tr>
+<tr><td>NoPE</td><td>No position in attention at all; recurrence carries it</td><td>pinned (Kimi-K3)</td><td><a href="../ch/10-positions-without-embeddings/">Ch 10</a> · <a href="../ch/18-decay-per-channel/">Ch 18</a></td></tr>
+<tr><td>iRoPE</td><td>Interleaved rotary and bare layers (Llama 4)</td><td>cited (Meta release notes)</td><td><a href="../ch/10-positions-without-embeddings/">Ch 10</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="dense"><span class="h-num">2</span>Dense: who shares what</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>Variant</th><th>Mechanism in one line</th><th>Status</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>MHA</td><td>Every query head owns KV heads; LLaDA keeps it (no cache to save)</td><td>pinned</td><td><a href="../ch/06-share-the-keys/">Ch 6</a></td></tr>
+<tr><td>MQA</td><td>Whole layer shares one KV head; V4.1-Flash runs 64 queries over 1</td><td>pinned</td><td><a href="../ch/06-share-the-keys/">Ch 6</a></td></tr>
+<tr><td>GQA</td><td>Groups of queries share KV heads; repeat before the matmul</td><td>pinned (1–128 KV heads)</td><td><a href="../ch/06-share-the-keys/">Ch 6</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="local"><span class="h-num">3</span>Local windows and streaming</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>Variant</th><th>Mechanism in one line</th><th>Status</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>SWA</td><td>Attend to the last W tokens; Mistral 4,096, gpt-oss 128</td><td>pinned</td><td><a href="../ch/07-look-nearby/">Ch 7</a></td></tr>
+<tr><td>StreamingLLM + sinks</td><td>Window plus pinned initial-token sinks; streams to 4M tokens unfine-tuned</td><td>cited (<a href="https://github.com/mit-han-lab/streaming-llm" target="_blank" rel="noopener">mit-han-lab/streaming-llm</a>)</td><td><a href="../ch/07-look-nearby/">Ch 7</a></td></tr>
+<tr><td>Quest / InfLLM</td><td>Query-aware KV sparsity for loading; off-GPU memory units with lookup</td><td>cited (papers)</td><td><a href="../ch/07-look-nearby/">Ch 7</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="latent"><span class="h-num">4</span>Latent compression</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>Variant</th><th>Mechanism in one line</th><th>Status</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>MLA</td><td>Cache one 512-number latent + decoupled rotary key; expand per head at read</td><td>pinned</td><td><a href="../ch/08-compress-the-cache/">Ch 8</a></td></tr>
+<tr><td>MLA absorb modes</td><td>Reconstruct full KV for prefill (MHA mode) or attend the latent directly (MQA mode)</td><td>pinned (code shapes)</td><td><a href="../ch/08-compress-the-cache/">Ch 8</a></td></tr>
+<tr><td>Gated / NoPE MLA</td><td>Output gating and position-free MLA beside linear layers (Kimi lineage)</td><td>pinned (Kimi-K3 ranks + NoPE)</td><td><a href="../ch/18-decay-per-channel/">Ch 18</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="sparse"><span class="h-num">5</span>Sparse selection</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>Variant</th><th>Mechanism in one line</th><th>Status</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>DSA</td><td>Lightning indexer scores the past; full attention over top-2,048</td><td>pinned</td><td><a href="../ch/09-attend-to-thousands/">Ch 9</a></td></tr>
+<tr><td>NSA</td><td>Three paths per query — compressed coarse, selected fine, sliding window — natively trainable end to end with Triton kernels</td><td>cited (<a href="https://arxiv.org/abs/2502.11089" target="_blank" rel="noopener">arXiv:2502.11089</a>)</td><td><a href="../ch/09-attend-to-thousands/">Ch 9</a></td></tr>
+<tr><td>BigBird / Longformer</td><td>Random + window + global patterns for long documents</td><td>out of scope (pre-2022 classics)</td><td>—</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="linear"><span class="h-num">6</span>Linear-time challengers</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>Variant</th><th>Mechanism in one line</th><th>Status</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>Mamba / Mamba-2</td><td>Selective state spaces; input-dependent transitions, parallel scan</td><td>cited (papers + pinned code ref)</td><td><a href="../ch/16-a-state-not-a-cache/">Ch 16</a></td></tr>
+<tr><td>RetNet</td><td>Multi-scale retention with parallel, recurrent and chunkwise forms; decay replaces softmax</td><td>cited (<a href="https://arxiv.org/abs/2307.08621" target="_blank" rel="noopener">arXiv:2307.08621</a>)</td><td><a href="../ch/16-a-state-not-a-cache/">Ch 16</a></td></tr>
+<tr><td>GLA</td><td>Data-dependent forget gate on matrix-valued state, chunkwise for tensor cores</td><td>cited (<a href="https://arxiv.org/abs/2312.06635" target="_blank" rel="noopener">arXiv:2312.06635</a>)</td><td><a href="../ch/16-a-state-not-a-cache/">Ch 16</a></td></tr>
+<tr><td>Gated DeltaNet</td><td>Delta-rule fast weights plus Mamba-style gating; 3:1 hybrid backbone</td><td>cited (papers)</td><td><a href="../ch/17-memory-with-a-rule/">Ch 17</a></td></tr>
+<tr><td>KDA</td><td>Channel-wise decay refining GDN, beside NoPE MLA</td><td>pinned (Kimi-K3)</td><td><a href="../ch/18-decay-per-channel/">Ch 18</a></td></tr>
+<tr><td>Lightning attention</td><td>Recurrent linear attention paired 7:1 with MLA (MiniMax)</td><td>cited (release notes)</td><td><a href="../ch/19-seven-linear-one-latent/">Ch 19</a></td></tr>
+<tr><td>RWKV-4…7</td><td>Receptance-weighted keys with evolving state rules; v7 adds dynamic state evolution</td><td>cited (project wiki)</td><td><a href="../timeline/#y2023">Timeline</a></td></tr>
+<tr><td>Hyena</td><td>Long implicit convolutions gated as attention replacements</td><td>cited (<a href="https://arxiv.org/abs/2302.10866" target="_blank" rel="noopener">arXiv:2302.10866</a>)</td><td><a href="../ch/16-a-state-not-a-cache/">Ch 16</a></td></tr>
+<tr><td>Griffin / HGRN / xLSTM / TTT</td><td>Gated recurrent and test-time-training sequence mixers</td><td>cited (papers)</td><td><a href="../ch/16-a-state-not-a-cache/">Ch 16</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="scoring"><span class="h-num">7</span>Scoring and gating</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>Variant</th><th>Mechanism in one line</th><th>Status</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>Softmax + repeat</td><td>Standard scores over repeated shared heads</td><td>pinned</td><td><a href="../ch/06-share-the-keys/">Ch 6</a></td></tr>
+<tr><td>Sigmoid routing</td><td>MoE scores with scaling factor, no auxiliary loss</td><td>pinned</td><td><a href="../ch/12-tiny-experts/">Ch 12</a></td></tr>
+<tr><td>Gated attention</td><td>Full attention with a per-feature output gate (Qwen3-Next companion layers)</td><td>cited (release lineage)</td><td><a href="../ch/17-memory-with-a-rule/">Ch 17</a></td></tr>
+<tr><td>Differential attention</td><td>Two softmax maps subtracted to cancel common-mode noise</td><td>cited (paper)</td><td><a href="../ch/17-memory-with-a-rule/">Ch 17</a></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="drafting"><span class="h-num">8</span>Predicting ahead</h2>
+
+<div class="table wide"><table>
+<thead><tr><th>Variant</th><th>Mechanism in one line</th><th>Status</th><th>Course</th></tr></thead>
+<tbody>
+<tr><td>MTP heads</td><td>Extra heads train to predict further futures (1–3 layers)</td><td>pinned</td><td><a href="../ch/21-one-pass-several-tokens/">Ch 21</a></td></tr>
+<tr><td>Medusa</td><td>Extra decoding heads plus tree attention; 2.2–2.8x claimed, no draft model</td><td>cited (<a href="https://arxiv.org/abs/2401.10774" target="_blank" rel="noopener">arXiv:2401.10774</a>)</td><td><a href="../ch/21-one-pass-several-tokens/">Ch 21</a></td></tr>
+<tr><td>EAGLE / EAGLE-2</td><td>Autoregress features with the sampled token fed back (~0.8 draft accuracy); dynamic trees in v2; 2.7–5x claimed</td><td>cited (<a href="https://arxiv.org/abs/2401.15077" target="_blank" rel="noopener">arXiv:2401.15077</a>, <a href="https://arxiv.org/abs/2406.16858" target="_blank" rel="noopener">arXiv:2406.16858</a>)</td><td><a href="../ch/21-one-pass-several-tokens/">Ch 21</a></td></tr>
+<tr><td>DSpark</td><td>Markov drafter with 5-token blocks verified at layers 37–39</td><td>pinned (V4.1-Flash)</td><td><a href="../ch/21-one-pass-several-tokens/">Ch 21</a></td></tr>
+</tbody>
+</table></div>
+
+<p>Missing something, or wrong about a status? The <a href="{{repo}}" target="_blank" rel="noopener">repository</a> takes corrections with the same bar as chapters: a pinned line, or a paper link with the claim attributed. The full link list behind the cited rows lives in <code>research/architectures.md</code>.</p>
