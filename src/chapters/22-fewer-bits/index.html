@@ -8,6 +8,10 @@
 
 <p>Formats are bytes per number with rules about range and precision. bf16 spends 16 bits everywhere; FP8 spends 8 with a narrower range that needs per-block scales; MXFP4 spends 4 with microscaling the kernels must understand. The figure's bars are exact: bytes equal params times width. Quality at each width is a separate, measured question the course doesn't answer from arithmetic.</p>
 
+<excerpt e="vllm" p="vllm/scalar_type.py" l="327-336" hl="328,332,334,335,336" s="float8_e4m3fn" title="vLLM: the narrow formats as (exponent, mantissa) budgets"></excerpt>
+
+<p>Formats are bit layouts, not just widths, and vLLM's <code>scalar_types</code> spells the budgets out: FP8 e4m3 is 4 exponent bits and 3 mantissa, FP4 is e2m1 — 2 and 1, per the OCP microscaling spec <ref e="vllm" p="vllm/scalar_type.py" l="344-345" s="float4_e2m1f"></ref> — and MXFP4's value slot is exactly that type. The 16-bit room splits two ways: <code>float16_e5m10</code> is IEEE FP16, 5 exponent bits and 10 mantissa, while <code>float16_e8m7</code> is bf16 and keeps fp32's 8-bit exponent <ref e="vllm" p="vllm/scalar_type.py" l="356-358" s="bfloat16"></ref>. Every roster config records bfloat16 <ref e="qwen25-7b" p="config.json" l="22" s="bfloat16"></ref>; IEEE FP16 survives as an engine-side dtype, and no checkpoint on this roster records it. Integer storage sits beside the float ladder — <code>int4</code> and <code>uint4</code> for engine-side 4-bit storage <ref e="vllm" p="vllm/scalar_type.py" l="328" s="int4"></ref>, with GPTQ's byte-packed variants a few lines down <ref e="vllm" p="vllm/scalar_type.py" l="347" s="gptq"></ref> — and the pinned configs leave those too as serving-time conversions.</p>
+
 <h2 id="recorded"><span class="h-num">22.2</span>What the configs record</h2>
 
 <p>The dense baselines declare bf16 and stop there <ref e="qwen25-7b" p="config.json" l="22" s="torch_dtype"></ref> <ref e="mistral-7b" p="config.json" l="20" s="torch_dtype"></ref> <ref e="dsv3" p="config.json" l="62" s="torch_dtype"></ref>. The flagships record narrower checkpoints with schemes and block sizes. GLM-5.3 and V4.1-Flash both quantize FP8 dynamically, with 128- and 32-wide scaling blocks respectively:</p>
@@ -37,6 +41,12 @@
 <h2 id="blocks"><span class="h-num">22.3</span>Blocks, not tensors</h2>
 
 <p>Narrow formats scale per block, not per tensor: 128 consecutive weights share one FP8 scale in GLM-5.3, 32 in V4.1-Flash. Smaller blocks track outliers better and cost more scale metadata; the 4x difference is a precision-against-overhead dial the two vendors set differently. gpt-oss's exception list is the other half of the design: attention, routing, embeddings and the LM head stay precise while experts go narrow, because errors in routing compound across every token while errors in one expert touch few. Read any quantization_config as two decisions — how narrow, and what escapes.</p>
+
+<p>At 4 bits the block dial turns again. MXFP4 gives 32 weights one shared scale — <code>block_shape = (1, 32)</code> in vLLM's MXFP4 loader <ref e="vllm" p="vllm/model_executor/layers/fused_moe/oracle/mxfp4.py" l="82" s="block_shape"></ref>. NVFP4, the Blackwell-native scheme, halves the block: 16 packed FP4 values share one FP8 scale, and one FP32 scale sits above every expert <ref e="vllm" p="vllm/model_executor/layers/quantization/online/nvfp4.py" l="43-46" s="global scale"></ref>, derived as the 4-bit-max times 8-bit-max over the tensor's amax at quantize time <ref e="vllm" p="vllm/model_executor/layers/quantization/online/nvfp4.py" l="54" s="global_scale"></ref>. Smaller blocks track outliers more tightly than MXFP4's 32; the second scale level is what buys it. And the hardware rule is explicit in the loader: group-16 NVFP4 computes only on Blackwell SM100-family GPUs <ref e="vllm" p="vllm/model_executor/layers/quantization/online/nvfp4.py" l="95" s="is_device_capability_family"></ref>.</p>
+
+<p>The two block layouts meet in one engine. Serving an MXFP4 checkpoint through vLLM's Blackwell TRT-LLM MoE backend keeps the checkpoint bytes but re-orders the scales through NVFP4's channel interleaving, 16 scale elements per group <ref e="vllm" p="vllm/model_executor/layers/fused_moe/oracle/mxfp4.py" l="918" s="num_elts_per_sf"></ref>, and the reshaped scales re-appear as float8_e4m3fn <ref e="vllm" p="vllm/model_executor/layers/fused_moe/oracle/mxfp4.py" l="981" s="float8_e4m3fn"></ref>. The config records the disk format; the kernel consumes the layout it needs.</p>
+
+<excerpt e="vllm" p="vllm/model_executor/layers/fused_moe/oracle/mxfp4.py" l="860-863" hl="860,862" s="TRTLLM_BACKENDS" title="vLLM: an MXFP4 checkpoint rides through the Blackwell TRT-LLM backend into an NVFP4 scale layout"></excerpt>
 
 <h2 id="cache"><span class="h-num">22.4</span>The cache can go narrow too</h2>
 
@@ -131,5 +141,6 @@
     <li>Read quantization configs as two decisions: how narrow, and what escapes.</li>
     <li>Block size dials outlier tracking against metadata; 128 vs 32 is a real design difference.</li>
     <li>Caches narrow by the same arithmetic; engines decide the offering.</li>
+    <li>MXFP4 and NVFP4 are both FP4 e2m1 and differ in scale blocks: 32 wide on disk, group-16 FP8 under one FP32 global scale on Blackwell. Engines re-layout the checkpoint at load; the config records the disk format.</li>
   </ul>
 </div>

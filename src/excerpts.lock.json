@@ -330,5 +330,27 @@
    "  \"num_key_value_heads\": 8,",
    "  \"num_local_experts\": 8,"
   ]
+ ],
+ "vllm@ced6857afa0e:vllm/model_executor/layers/fused_moe/oracle/mxfp4.py#860-863": [
+  [
+   "    elif mxfp4_backend in TRTLLM_BACKENDS:",
+   "        assert _cache_permute_indices is not None",
+   "        from flashinfer.fp4_quantization import nvfp4_block_scale_interleave",
+   "        from flashinfer.fused_moe.core import get_w2_permute_indices_with_cache"
+  ]
+ ],
+ "vllm@ced6857afa0e:vllm/scalar_type.py#327-336": [
+  [
+   "class scalar_types:",
+   "    int4 = ScalarType.int_(4, None)",
+   "    uint4 = ScalarType.uint(4, None)",
+   "    int8 = ScalarType.int_(8, None)",
+   "    uint8 = ScalarType.uint(8, None)",
+   "    float8_e4m3fn = ScalarType.float_(4, 3, True, NanRepr.EXTD_RANGE_MAX_MIN)",
+   "    float8_e5m2 = ScalarType.float_IEEE754(5, 2)",
+   "    float8_e8m0fnu = ScalarType(8, 0, False, 0, True, NanRepr.EXTD_RANGE_MAX_MIN)",
+   "    float16_e8m7 = ScalarType.float_IEEE754(8, 7)",
+   "    float16_e5m10 = ScalarType.float_IEEE754(5, 10)"
+  ]
  ]
 }
