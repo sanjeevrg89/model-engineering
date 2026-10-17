@@ -1,0 +1,35 @@
+<header class="ch-head">
+  <div class="ch-head__eyebrow"><span class="label">On-ramp</span></div>
+  <h1>Start here</h1>
+  <p class="ch-head__dek">The five ideas every chapter of this course assumes: tokens become vectors, one matrix multiplication, attention as a lookup, normalization, and the residual add. Ten minutes, one square-root symbol. Then chapter 1 reads at config speed.</p>
+</header>
+
+<h2 id="tokens"><span class="h-num">1</span>Words in, numbers out</h2>
+
+<p>A model has never seen a word. It sees <b>tokens</b>: the fragments a tokenizer cuts text into — a common word whole, a rare word in pieces, punctuation alone — and each fragment stores as one integer id. The vocabulary is just the list of possible ids: 32,000 of them in Mistral-7B and 152,064 in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="27" s="vocab_size"></ref>.</p>
+
+<p>The id's job is to pick a row from the model's first table. That row is a list of <code>hidden_size</code> numbers — 3,584 in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="9" s="hidden_size"></ref>, 4,096 in Mistral-7B <ref e="mistral-7b" p="config.json" l="8" s="hidden_size"></ref> — and it is the token's <b>vector</b>: the only representation the model ever works with. Dialogue, code and reasoning all enter as one vector per token, position by position.</p>
+
+<h2 id="matmul"><span class="h-num">2</span>The only arithmetic that matters</h2>
+
+<p>Everything a block computes reduces to one operation. Take the token's vector — n numbers — and a learned matrix of n rows by m columns, the <b>weights</b>. One output number = one row of the matrix times the whole vector: multiply each pair, add the products. Do that for all m rows and you have m new numbers. The output is called a <b>projection</b>, and it is the whole game.</p>
+
+<p>Keep two things in view. First, nothing here is fancier than multiply-and-add; a 500-billion-parameter checkpoint is a giant catalogue of such grids. Second, the widths tell you the cost: a projection from 3,584 numbers out to 18,944 <ref e="qwen25-7b" p="config.json" l="11" s="intermediate_size"></ref> owns 3,584 × 18,944 weights, and the feed-forward that owns it is the single biggest ingredient of a block — the pattern chapter 1 measures and chapter 22 stores more cheaply.</p>
+
+<h2 id="attention"><span class="h-num">3</span>Attention is a lookup</h2>
+
+<p>Each token's vector needs context from earlier tokens, and attention gathers it in three steps. Every position projects its vector into a <b>query</b> (what am I looking for), while earlier positions project into <b>keys</b> (what each offers) and <b>values</b> (what each hands over when chosen). Matching each query against every key by dot product gives scores; the scores squeeze to positive weights that sum to one; then attention returns the weighted blend of the values. Richly matched tokens donate more, weakly matched ones almost nothing.</p>
+
+<p>The lookup runs in parallel copies called <b>heads</b> — 28 of them in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="15" s="num_attention_heads"></ref> — each with its own query, key and value matrices, so one head can track syntax while another tracks who "it" refers to. Heads are the machine's eyes; how many get cached, shared or compressed is chapters 1, 6, 8 and 9.</p>
+
+<h2 id="norm"><span class="h-num">4</span>Normalization</h2>
+
+<p>Twenty-eight blocks in a row would drift: vectors could grow, shrink or lean, and nobody downstream asked for it. RMSNorm fixes volume. It divides the incoming vector by its <b>root mean square</b> — the square root of the average of the squared entries — and then scales each entry by a learned gain. The epsilon you will meet in chapter 1, 1e-06 in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="18" s="rms_norm_eps"></ref>, only keeps the division from dividing by zero. After the norm, every block begins with the token at a comparable size, whatever its adventure so far.</p>
+
+<h2 id="residual"><span class="h-num">5</span>The residual: blocks edit, never replace</h2>
+
+<p>Each sub-block in chapter 1 computes its projection output and then adds the original input back in: output = input + change. That is the <b>residual</b>, and its job is depth. The unchanged input always has a clean path around every projection, so the model only ever has to learn the small correction it wants applied, and a 92-layer stack stays trainable where a 92-layer chain of replacements would not.</p>
+
+<h2 id="next"><span class="h-num">6</span>That is the whole floor</h2>
+
+<p>Five ideas: token to vector, the multiply-and-add projection, the query-key-value lookup, the volume norm, the residual add. Chapter 1 now reads as it was written: two real configs side by side, one block, and the shapes that make 7B a 7B. The <a href="../glossary/">glossary</a> keeps definitions handy, and <a href="../ch/01-one-block/">chapter 1</a> is where the course starts.</p>
