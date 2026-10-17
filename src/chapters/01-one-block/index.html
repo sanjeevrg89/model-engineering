@@ -45,7 +45,23 @@
 
 <excerpt e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="187-196" hl="195" s="repeat_kv" title="Transformers: grouped-query attention repeats shared heads"></excerpt>
 
-<p>Qwen2.5's modeling file carries its own copy of the same function and the same group computation <ref e="hf-transformers" p="src/transformers/models/qwen2/modeling_qwen2.py" l="149" s="repeat_kv">qwen2/modeling_qwen2.py:149</ref> <ref e="hf-transformers" p="src/transformers/models/qwen2/modeling_qwen2.py" l="196" s="num_key_value_groups">qwen2/modeling_qwen2.py:196</ref>. The repeat factor is 7 for Qwen2.5-7B and 4 for Mistral-7B. Repeating is cheap arithmetic; the saving is memory. Each cached token stores only the KV heads: 4 × 128 numbers per layer for Qwen2.5-7B against 8 × 128 for Mistral-7B, which is 57,344 B against 131,072 B per token in bf16. Chapter 6 turns this into the full roster table.</p>
+<p>Qwen2.5's modeling file carries its own copy of the same function and the same group computation <ref e="hf-transformers" p="src/transformers/models/qwen2/modeling_qwen2.py" l="149" s="repeat_kv">qwen2/modeling_qwen2.py:149</ref> <ref e="hf-transformers" p="src/transformers/models/qwen2/modeling_qwen2.py" l="196" s="num_key_value_groups">qwen2/modeling_qwen2.py:196</ref>. The repeat factor is 7 for Qwen2.5-7B and 4 for Mistral-7B. Repeating is cheap arithmetic; the saving is memory. Each cached token stores only the KV heads: 4 × 128 numbers per layer for Qwen2.5-7B against 8 × 128 for Mistral-7B, times 2 for keys and values, times 2 B each, times the 28 and 32 layers — 57,344 B against 131,072 B per token in bf16. Chapter 6 turns this into the full roster table.</p>
+
+<p><b>One layer's attention, in five steps;</b> the pinned code does the lookup in five moves, and the cache write sits in the middle:</p>
+
+<ol>
+  <li><b>Project.</b> The scaled hidden vector goes through three matrices — q, k, v. Qwen2.5-7B's q and k projections output 3,584 and 512 numbers respectively: 28 heads × 128 wide, 4 heads × 128 wide.</li>
+  <li><b>Position.</b> Queries and keys rotate by their position (chapter 3's RoPE); values stay put.</li>
+  <li><b>Cache.</b> The new keys and values append to this layer's running KV tensor — the write you pay for on every step that generates a token: <code>past_key_values.update(key_states, value_states, self.layer_idx)</code>.</li>
+  <li><b>Score and blend.</b> Each query dot-products against the cached keys, the mask (the window of 1.4) removes forbidden positions, the scores squeeze to a mix, and the weighted values add up.</li>
+  <li><b>Project out.</b> The blended heads concatenate and pass through the output matrix, back to 3,584 numbers, ready for the feed-forward.</li>
+</ol>
+
+<excerpt e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="262-270" hl="262,263,264,267,270" s="past_key_values.update" title="LLaMA's one layer: project, position, append to the cache"></excerpt>
+
+<p>The call to the attention function takes the appended keys and values and returns the blend <ref e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="276" s="attention_interface"></ref>; the output projection closes the step <ref e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="288" s="o_proj"></ref>. Every layer of the 28 and 32 runs the same five moves on its own weights.</p>
+
+<aside class="side"><span class="label">Where the cache lives</span><p>The KV tensors live on the same GPU as the weights, one keys and one values tensor per layer, <code>[batch, heads, so-far tokens, head_dim]</code>, appended in place every step <ref e="hf-transformers" p="src/transformers/cache_utils.py" l="1231-1233" s="CacheLayer"></ref>. The append is a concatenation <ref e="hf-transformers" p="src/transformers/cache_utils.py" l="143" s="torch.cat"></ref>. Engines re-lay this out across memory pages — the sibling courses' subject; the course's memory budgets in chapter 20 read this shape directly.</p></aside>
 
 <figure id="fig-1-2"><figcaption><b>Figure 1.2</b> KV bytes per cached token in bf16, six roster configs, computed from layers, KV heads and head width. MLA and hybrid models keep latents or fixed states instead.</figcaption></figure>
 

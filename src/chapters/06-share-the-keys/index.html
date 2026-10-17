@@ -23,6 +23,8 @@
 
 <p>The repeat is a view-level copy before the matmul, so it costs arithmetic proportional to what attention would have read anyway. The saving is everything around it: smaller K/V projections, smaller optimizer states in training, and above all a smaller cache. Qwen3-8B repeats ×4, gpt-oss-120B ×8, V4.1-Flash ×64. The ×64 looks extreme until the next section's table shows what it buys at 1M context — and gpt-oss pairs its ×8 with a 128-token window, so the saving compounds.</p>
 
+<p>Who holds that cache: the model's <code>DynamicCache</code>, updated in place at line 270 of LLaMA's attention forward <ref e="hf-transformers" p="src/transformers/models/llama/modeling_llama.py" l="270" s="past_key_values.update"></ref> by concatenating the new keys and values onto per-layer tensors <ref e="hf-transformers" p="src/transformers/cache_utils.py" l="143-145" s="torch.cat"></ref> — one <code>CacheLayer</code> per model layer <ref e="hf-transformers" p="src/transformers/cache_utils.py" l="1232" s="CacheLayer"></ref>, resident beside the weights on the accelerator. Chapter 1's five-step walk places the write between positioning and scoring.</p>
+
 <div class="numbers">
   <div><span class="v">4,096<small>B</small></span><span class="d">KV read per layer per token, Qwen3-8B (8 heads × 128 × 2 × 2 B)</span></div>
   <div><span class="v">2,048<small>B</small></span><span class="d">KV read per layer per token, gpt-oss-120B (8 heads × 64 × 2 × 2 B)</span></div>
