@@ -54,4 +54,13 @@
 
   <dt id="active-params">Active parameters</dt>
   <dd>The weights one token actually touches: the full block for dense models, the router's picks for MoE (about 13B of Mixtral's 47B, 37B of DeepSeek-V3's 671B). Resident weights still need their memory. <span class="see"><a href="../ch/12-tiny-experts/">Chapter 12</a></span></dd>
+
+  <dt id="float-format">Floating-point format (e4m3, e5m2, e2m1)</dt>
+  <dd>A float's bits split into one sign, an exponent (how large the number can be) and a mantissa (how many meaningful digits survive). The letters after E name each count: e4m3 is 1 sign, 4 exponent, 3 mantissa; MLP modeling code calls IEEE FP16 <code>float16_e5m10</code> and bf16 <code>float16_e8m7</code>. <span class="see"><a href="../ch/22-fewer-bits/">Chapter 22</a></span></dd>
+
+  <dt id="bf16">bf16 vs FP16</dt>
+  <dd>Two ways to spend 16 bits: bf16 keeps fp32's 8-bit exponent, so no range surprises at training time; IEEE FP16 keeps 10 mantissa digits but a 5-bit exponent. Every roster config records bfloat16; FP16 survives as a serving dtype. <span class="see"><a href="../ch/22-fewer-bits/">Chapter 22</a></span></dd>
+
+  <dt id="quantization">Quantization and block scale</dt>
+  <dd>Round each weight to the nearest value a narrow format can express, and store one accurate scale per block so small numbers lift back up. Classes: FP8 (8-bit values, 128-wide blocks in GLM-5.3, 32 in V4.1-Flash), MXFP4 (4-bit values, 32-wide scale blocks, gpt-oss and Kimi-K3 experts), NVFP4 (4-bit values, 16-wide FP8 scales under one FP32 global scale, Blackwell kernels). <span class="see"><a href="../ch/22-fewer-bits/">Chapter 22</a></span></dd>
 </dl>
