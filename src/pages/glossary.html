@@ -5,6 +5,21 @@
 </header>
 
 <dl class="gloss">
+  <dt id="token">Token</dt>
+  <dd>The piece of text a model reads: a fragment a tokenizer splits words into, stored as an integer id. Vocabulary size is the number of possible ids (32,000 in Mistral-7B, 152,064 in Qwen2.5-7B). <span class="see"><a href="../ch/02-tokens-in-ids-out/">Chapter 2</a></span></dd>
+
+  <dt id="hidden-vector">Hidden vector</dt>
+  <dd>The list of numbers standing in for a token inside the model — <code>hidden_size</code> entries (3,584 in Qwen2.5-7B, 4,096 in Mistral-7B). Every block rewrites each token's vector before passing it on. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a></span></dd>
+
+  <dt id="weights">Weights</dt>
+  <dd>The learned matrices of the model, counted in parameters. One Qwen2.5-7B block has about 233M of them; the LM head scores the vocabulary. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a></span></dd>
+
+  <dt id="attention">Attention</dt>
+  <dd>A learned lookup: the current position builds a <b>query</b>, every earlier position offers a <b>key</b> and a <b>value</b>, and matching scores decide how much of each value blends in. Several <b>heads</b> run in parallel with different patterns. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a> · <a href="../zoo/">Zoo</a></span></dd>
+
+  <dt id="logits">Logits</dt>
+  <dd>The last block's output: one score per vocabulary entry. The sampler turns them into a next token. Qwen2.5-7B produces 152,064 per generated token. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a></span></dd>
+
   <dt id="decoder-block">Decoder block</dt>
   <dd>One residual unit of a decoder-only model: RMSNorm, attention, RMSNorm, feed-forward. Every roster model stacks 27–92 of them. <span class="see"><a href="../ch/01-one-block/">Chapter 1</a></span></dd>
 
