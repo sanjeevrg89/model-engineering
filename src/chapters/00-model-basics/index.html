@@ -1,0 +1,115 @@
+<p>Kimi-K3 stacks one block 93 times, DeepSeek-V4.1-Flash 76 times, Mistral-7B just 32. Everything this course does — the attention zoo, the expert routers, the caches — is machinery bolted onto or inside that block. So the floor comes first: five ideas, one square-root symbol, and every number taken from the two configs the whole course starts with.</p>
+
+<p>This chapter runs one token through an entire model twice, not through one block: once on Qwen2.5-7B's dimensions, once on Mistral-7B's. Chapter 1 then zooms into the block itself and walks the same token through it step by step.</p>
+
+<div class="tldr"><span class="label">The 2-minute version</span><p>A model has never read a word. Text becomes <b>tokens</b>; each token id picks a <b>vector</b> of 3,584 or 4,096 numbers from a table; the model rewrites that vector stack by stack with nothing fancier than <b>multiply-and-add</b> between learned matrices; <b>attention</b> is the lookup that lets each position pull context from earlier ones; <b>RMSNorm</b> keeps every vector at comparable size; the <b>residual</b> add means blocks only ever learn a small edit. At the end, a table maps the final vector to 152,064 or 32,000 <b>logits</b> — one score per possible next token.</p><span class="obj">After this chapter you can: define token, vector, weights, head, logits in one line each · compute the width of any projection from a config · explain what attention chooses and what a residual protects.</span></div>
+
+<h2 id="ideas"><span class="h-num">0.1</span>One token's lifetime through the whole model</h2>
+
+<figure id="fig-0-1"></figure>
+
+<p>The figure follows a single token from text to its effect on the next token, across the whole network. Both channels run the same five ideas in the same order; they differ only in widths and counts, exactly the way every chapter of this course will run one workload through two designs. Nothing here requires more than one number concept: a vector is a list of numbers, a weights matrix is a grid of numbers, and every stage multiplies, adds, or picks.</p>
+
+<p>The vocabulary lengths differ by five to one: 152,064 possible next tokens in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="27" s="vocab_size"></ref> against 32,000 in Mistral-7B <ref e="mistral-7b" p="config.json" l="23" s="vocab_size"></ref>. That asymmetry runs through the rest of the course: chapter 2 breaks vocabulary mechanics down, chapter 5 prices the final scoring table, chapter 21 relies on it for multiple tokens per pass.</p>
+
+<h2 id="tokens"><span class="h-num">0.2</span>Words in, numbers out</h2>
+
+<p>A model has never seen a word. It sees <b>tokens</b>: the fragments a tokenizer cuts text into — a common word whole, a rare word in pieces, punctuation alone — and each fragment stores as one integer id. The id's job is to pick a row from the model's first table. That row is a list of <code>hidden_size</code> numbers — 3,584 in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="9" s="hidden_size"></ref>, 4,096 in Mistral-7B <ref e="mistral-7b" p="config.json" l="8" s="hidden_size"></ref> — and it is the token's <b>vector</b>: the only representation the model ever works with.</p>
+
+<h2 id="matmul"><span class="h-num">0.3</span>The only arithmetic that matters</h2>
+
+<p>Everything a block computes reduces to one operation. Take the token's vector — n numbers — and a learned matrix of n rows by m columns, the <b>weights</b>. One output number = one row of the matrix times the whole vector: multiply each pair, add the products. Do that for all m rows and you have m new numbers; that output is a <b>projection</b>. The widths tell you the cost: a projection from 3,584 numbers out to 18,944 <ref e="qwen25-7b" p="config.json" l="11" s="intermediate_size"></ref> owns 3,584 × 18,944 weights, and the feed-forward that owns it is the single biggest ingredient of a block. Chapter 1 measures it; chapter 22 stores it more cheaply.</p>
+
+<h2 id="attention"><span class="h-num">0.4</span>Attention is a lookup</h2>
+
+<p>Each token's vector needs context from earlier tokens, and attention gathers it in three steps. Every position projects its vector into a <b>query</b> (what am I looking for), while earlier positions project into <b>keys</b> (what each offers) and <b>values</b> (what each hands over when chosen). Matching each query against every key gives scores; the scores squeeze to positive weights that sum to one; then attention returns the weighted blend of the values.</p>
+
+<p>The lookup runs in parallel copies called <b>heads</b> — 28 of them in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="15" s="num_attention_heads"></ref>, each with its own query, key and value matrices, so one head can track syntax while another tracks who "it" refers to. Heads are the machine's eyes; how many get cached, shared or compressed is chapters 1, 6, 8 and 9.</p>
+
+<h2 id="norm"><span class="h-num">0.5</span>Normalization</h2>
+
+<p>Twenty-eight blocks in a row would drift: vectors could grow, shrink or lean. RMSNorm fixes volume. It divides the incoming vector by its <b>root mean square</b> — the square root of the average of the squared entries — and then scales each entry by a learned gain. The epsilon, 1e-06 in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="18" s="rms_norm_eps"></ref>, only keeps the division from dividing by zero. After the norm, every block begins with the token at a comparable size, whatever its adventure so far.</p>
+
+<h2 id="residual"><span class="h-num">0.6</span>The residual: blocks edit, never replace</h2>
+
+<p>Each sub-block computes its projection output and then adds the original input back in: output = input + change. That is the <b>residual</b>, and its job is depth. The unchanged input always has a clean path around every projection, so the model only ever has to learn the small correction it wants applied, and a 93-layer stack stays trainable where a 93-layer chain of replacements would not.</p>
+
+<h2 id="read"><span class="h-num">0.7</span>Read the two configs</h2>
+
+<p>Everything this chapter taught is in two small JSON files. Line 9 of one and line 8 of the other are the whole course's width pair; the vocabulary lines are why tokenizers and samplers differ. Start from the configs, then the three sections above have numbers under every idea.</p>
+
+<div class="reading">
+  <section class="reading--a">
+    <h4><span class="badge badge--a">A</span>Qwen2.5-7B</h4>
+    <ol>
+      <li><div><ref e="qwen25-7b" p="config.json" l="9" s="hidden_size">config.json: the width</ref><span>hidden_size 3584 — how many numbers a token is.</span></div></li>
+      <li><div><ref e="qwen25-7b" p="config.json" l="15" s="num_attention_heads">config.json: the heads</ref><span>28 query heads and 4 KV heads; chapters 1 and 6 build on this line.</span></div></li>
+      <li><div><ref e="qwen25-7b" p="config.json" l="27" s="vocab_size">config.json: the vocabulary</ref><span>152,064 entries; the scorer's width and chapter 5's bill.</span></div></li>
+    </ol>
+  </section>
+  <section class="reading--b">
+    <h4><span class="badge badge--b">B</span>Mistral-7B-v0.1</h4>
+    <ol>
+      <li><div><ref e="mistral-7b" p="config.json" l="8" s="hidden_size">config.json: the width</ref><span>hidden_size 4096 — the other side of the floor.</span></div></li>
+      <li><div><ref e="mistral-7b" p="config.json" l="13" s="num_attention_heads">config.json: the heads</ref><span>32 query heads, 8 KV heads; a different sharing ratio for the same recipe.</span></div></li>
+      <li><div><ref e="mistral-7b" p="config.json" l="23" s="vocab_size">config.json: the vocabulary</ref><span>32,000 entries — five times narrower than Qwen2.5's.</span></div></li>
+    </ol>
+  </section>
+</div>
+
+<h2 id="check"><span class="h-num">0.8</span>Check yourself</h2>
+
+<div class="quiz">
+  <div class="q" data-answer="a">
+    <p class="q__stem">A model reads a short prompt. After tokenization and embedding, what exists for one fragment?</p>
+    <ol class="q__opts">
+      <li data-k="a">One integer id, which has picked one vector of <code>hidden_size</code> numbers</li>
+      <li data-k="b">One word meaning, stored as text</li>
+      <li data-k="c">One number per letter of the word</li>
+      <li data-k="d">The whole vocabulary table</li>
+    </ol>
+    <div class="q__why">The id is an index; the embedding table turns it into one vector — 3,584 numbers in Qwen2.5-7B, 4,096 in Mistral-7B (§0.2).</div>
+  </div>
+  <div class="q" data-answer="b">
+    <p class="q__stem">A projection goes from 3,584 numbers out to 18,944. How many weights does it own?</p>
+    <ol class="q__opts">
+      <li data-k="a">3,584 + 18,944</li>
+      <li data-k="b">3,584 × 18,944</li>
+      <li data-k="c">18,944 / 3,584</li>
+      <li data-k="d">None — projections share the embedding's weights</li>
+    </ol>
+    <div class="q__why">Every output number needs one weight per input number: rows times columns (§0.3). That product is why the feed-forward dominates a block.</div>
+  </div>
+  <div class="q" data-answer="c">
+    <p class="q__stem">What does the score between a query and a key decide?</p>
+    <ol class="q__opts">
+      <li data-k="a">Which expert routes the token</li>
+      <li data-k="b">The next token id</li>
+      <li data-k="c">How much of that position's value blends into the attention output</li>
+      <li data-k="d">The vector's size after the block</li>
+    </ol>
+    <div class="q__why">Scores squeeze into weights that sum to one; attention returns the weighted blend of the values (§0.4). Choosing is attention's only job.</div>
+  </div>
+  <div class="q" data-answer="b">
+    <p class="q__stem">What makes a 93-layer stack trainable where a chain of replacements would not be?</p>
+    <ol class="q__opts">
+      <li data-k="a">RMSNorm, because it keeps sizes comparable</li>
+      <li data-k="b">The residual add: blocks learn a change to the input, and the input always keeps a clean path through</li>
+      <li data-k="c">The small 32,000-token vocabulary</li>
+      <li data-k="d">Grouped-query attention</li>
+    </ol>
+    <div class="q__why">Output = input + change means the model only learns corrections (§0.6). Norm is the other guardrail, but the clean path is the residual's doing.</div>
+  </div>
+</div>
+
+<div class="takeaways">
+  <span class="label">Takeaways</span>
+  <ul>
+    <li>Tokens are ids; ids are rows of numbers — 152,064 vocabulary entries <ref e="qwen25-7b" p="config.json" l="27" s="vocab_size"></ref> exist to become one 3,584-number vector per token <ref e="qwen25-7b" p="config.json" l="9" s="hidden_size"></ref>.</li>
+    <li>Every mechanism is multiply-and-add plus a decision: attention, the feed-forward and the final scorer are all projections.</li>
+    <li>Attention chooses; the other stages compute. Query-key scores decide which earlier positions donate values, and heads are parallel choices at work.</li>
+    <li>Norm and residual are depth's guardrails: one keeps every vector comparable in size, the other guarantees blocks only learn small edits on a clean path.</li>
+  </ul>
+</div>
+
+<script type="module" src="viz.js"></script>

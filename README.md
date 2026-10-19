@@ -6,9 +6,10 @@ Each chapter runs one workload through two landmark designs on a shared clock
 of the mechanism in Python, and points into the real configs and code at pinned
 revisions.
 
-- 30 chapters in six parts: the recipe everyone inherited, cheaper attention, many
-  experts, beyond attention (linear-time challengers), predict more / store less,
-  and other ways to generate (diffusion, multimodal, agents, serving)
+- 31 chapters in six parts: a foundations on-ramp (chapter 0) and the recipe
+  everyone inherited, cheaper attention, many experts, beyond attention (linear-time
+  challengers), predict more / store less, and other ways to generate (diffusion,
+  multimodal, agents, serving)
 - fifteen pinned open-weight configs that cover dense, sliding-window, GQA, MLA,
   sparse-attention, fine-grained MoE, trillion-parameter hybrids and diffusion
   designs, from Mistral-7B (2023) to Kimi-K3 (2026)

@@ -338,7 +338,7 @@ function rail(rel, currentSlug, sections = []) {
       )}</span></div><ol>${items}</ol></section>`;
     })
     .join("");
-  return `<nav class="rail" aria-label="Course chapters">${parts}<div class="rail__foot"><a href="${rel}basics/">Start here</a><a href="${rel}compare/">Every spec sheet at a glance</a><a href="${rel}timeline/">Timeline</a><a href="${rel}zoo/">Attention zoo</a><a href="${rel}glossary/">Glossary</a><a href="${rel}hardware/">Hardware</a><a href="${rel}capstones/">GPU capstones</a><a href="${rel}contribute/">From reader to contributor</a><a href="${rel}method/">How this course is checked</a></div></nav>`;
+  return `<nav class="rail" aria-label="Course chapters">${parts}<div class="rail__foot"><a href="${rel}ch/00-model-basics/">Start here</a><a href="${rel}compare/">Every spec sheet at a glance</a><a href="${rel}timeline/">Timeline</a><a href="${rel}zoo/">Attention zoo</a><a href="${rel}glossary/">Glossary</a><a href="${rel}hardware/">Hardware</a><a href="${rel}capstones/">GPU capstones</a><a href="${rel}contribute/">From reader to contributor</a><a href="${rel}method/">How this course is checked</a></div></nav>`;
 }
 
 function topbar(rel, crumbs) {
@@ -633,7 +633,6 @@ chapters.forEach((ch, i) => {
 
 buildPage("index", { rel: "", out: "", rail: false, article: false, title: "", description: course.site.description });
 const EXTRA_PAGES = {
-  basics: ["Start here: the five ideas", "Basics"],
   method: ["How this course is checked", "Method"],
   glossary: ["Glossary", "Glossary"],
   hardware: ["Hardware the course covers", "Hardware"],

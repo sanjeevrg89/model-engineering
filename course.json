@@ -279,6 +279,15 @@
       "dek": "ChatGPT goes mainstream, LLaMA leaks the recipe, and every open model since cooks a variation: one decoder block, a tokenizer, a position scheme and a scale.",
       "chapters": [
         {
+          "slug": "00-model-basics",
+          "num": 0,
+          "title": "Model basics: the five ideas",
+          "question": "What does a model actually compute, in plain terms?",
+          "dek": "Tokens become vectors, one multiply-and-add, attention as a lookup, a volume norm, a residual edit. Ten minutes of foundations, with Qwen2.5-7B and Mistral-7B providing the real numbers.",
+          "minutes": 15,
+          "lab": false
+        },
+        {
           "slug": "01-one-block",
           "num": 1,
           "title": "One block to learn them all",
