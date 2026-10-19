@@ -1,4 +1,5 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { tokens, arrow } from "../../assets/js/prims.js";
 
 // One token's lifetime through an entire model, twice: Qwen2.5-7B's dimensions on
 // channel A, Mistral-7B-v0.1's on channel B. Numbers from the pinned configs:
@@ -70,4 +71,45 @@ mountScope("#fig-0-1", {
   ],
   build,
   draw: { a: stageDraw("a"), b: stageDraw("b") },
+});
+
+/* ---- figure 0.2: the worked projection, drawn --------------------------------
+ * §0.3's two-number example, no new numbers: input [1.0, 2.0], matrix rows
+ * [0.5, 1.0] and [2.0, -0.5], outputs 2.5 and 1.0.
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-0-2", {
+  width: 760,
+  height: 150,
+  label: "The only arithmetic a block does, drawn",
+  draw(r, ctx) {
+    tokens(r, "vec", {
+      x: 0, y: 30, w: 36, h: 24, gap: 2,
+      items: [{ t: "1.0", c: "s-a-solid" }, { t: "2.0", c: "s-a-solid" }],
+    });
+    r.text("vl", { x: 0, y: 62, class: "t-mono t-xs t-dim" }, "token's vector");
+
+    tokens(r, "mat", {
+      x: 160, y: 30, w: 36, h: 24, gap: 2, wrap: 2,
+      items: [
+        { t: "0.5", c: "s-panel" }, { t: "1.0", c: "s-panel" },
+        { t: "2.0", c: "s-panel" }, { t: "−0.5", c: "s-panel" },
+      ],
+    });
+    r.text("ml", { x: 160, y: 62, class: "t-mono t-xs t-dim" }, "learned weights");
+
+    tokens(r, "out", {
+      x: 320, y: 30, w: 36, h: 24, gap: 2,
+      items: [{ t: "2.5", c: "s-good" }, { t: "1.0", c: "s-good" }],
+    });
+    r.text("ol", { x: 320, y: 62, class: "t-mono t-xs t-dim" }, "projection out");
+
+    arrow(r, "a1", ctx, { x1: 78, y1: 42, x2: 156, y2: 42 });
+    arrow(r, "a2", ctx, { x1: 238, y1: 42, x2: 316, y2: 42 });
+
+    r.text("w1", { x: 420, y: 40, class: "t-mono t-sm t-dim" }, "0.5 × 1.0 + 1.0 × 2.0 = 2.5");
+    r.text("w2", { x: 420, y: 60, class: "t-mono t-sm t-dim" }, "2.0 × 1.0 + (−0.5) × 2.0 = 1.0");
+    r.text("w3", { x: 420, y: 86, class: "t-xs t-dim" }, "one matrix row dotted with the vector, per output");
+
+    r.text("note", { x: 0, y: 92, class: "t-xs t-dim" }, "In the real models n is 3,584 / 4,096 and m up to 18,944 — same rule, just many more rows.");
+  },
 });

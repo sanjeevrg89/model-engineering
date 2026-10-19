@@ -1,4 +1,4 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
 
 // Weighing one billion params and one KV receipt in three precisions.
 // Exact arithmetic: bytes = count × width. 1B params → 2 GB bf16, 1 GB FP8,
@@ -82,4 +82,42 @@ mountScope("#fig-22-1", {
   ],
   build,
   draw: { a: weighDraw(null, "A · bf16 throughout", "s-a"), b: weighDraw(null, "B · FP8, then MXFP4", "s-b") },
+});
+
+/* ---- figure 22.2: the float layouts, drawn -----------------------------------
+ * Widths to bytes at 170 px per byte: the 16-bit rows are 340 px wide, FP8 is
+ * 170, the 4-bit formats 85. Bit layouts per ch22 §22.3: fp16 e5m10, bf16 e8m7,
+ * FP8 e4m3, INT4 integers, NVFP4/MXFP4 e2m1 with a wider scale beside it.
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-22-2", {
+  width: 760,
+  height: 250,
+  label: "Same four bytes-vs-bits choices, drawn as bit fields",
+  draw(r, ctx) {
+    const rows = [
+      { name: "FP16 · fp16 (e5m10)", bytes: 2, bits: [["s", 1, "s-ink-o"], ["E", 5, "s-good"], ["M", 10, "s-panel"]], note: "2 B per number" },
+      { name: "bf16 · bf16 (e8m7)", bytes: 2, bits: [["s", 1, "s-ink-o"], ["E", 8, "s-good"], ["M", 7, "s-panel"]], note: "2 B · same 16 bits, exponent relabeled" },
+      { name: "FP8 · e4m3", bytes: 1, bits: [["s", 1, "s-ink-o"], ["E", 4, "s-good"], ["M", 3, "s-panel"]], note: "1 B · narrower, needs block scales" },
+      { name: "INT4 · q_4 (gptq)", bytes: 0.5, bits: [["i", 4, "s-sunk"]], note: "0.5 B · an integer grid, not a float" },
+      { name: "FP4 · e2m1 (NVFP4 / MXFP4)", bytes: 0.5, bits: [["s", 1, "s-ink-o"], ["E", 2, "s-good"], ["M", 1, "s-panel"]], note: "0.5 B · FP32 scale beside each group of 16" },
+    ];
+    const BAR = 170; // px per byte
+    rows.forEach((row, i) => {
+      const y = 28 + i * 42;
+      r.text("n" + i, { x: 0, y: y + 14, class: "t-mono t-sm t-end" }, row.name);
+      const total = row.bytes * BAR;
+      const bits = row.bits.reduce((s, b) => s + b[1], 0);
+      let x = 250;
+      row.bits.forEach((b, bi) => {
+        const bw = (b[1] / bits) * total;
+        const g = r.g("f" + i + ":" + bi, x, y);
+        g.rect("r", { width: Math.max(6, bw - 2), height: 26, rx: 3, class: b[2] });
+        if (bw > 24) g.text("t", { x: bw / 2, y: 17, class: "t-mono t-xs t-mid" + (b[2] === "s-ink-o" ? " t-inv" : "") }, b[0]);
+        else g.text("t", { x: -10, y: 17, class: "t-mono t-xs t-dim" }, b[0]);
+        x += bw;
+      });
+      r.text("b" + i, { x: 252, y: y + 38, class: "t-xs t-dim" }, row.note);
+    });
+    r.text("cap", { x: 250, y: 244, class: "t-xs t-dim" }, "s = sign bit · E = exponent (range) · M = mantissa (precision) · i = integer bits. More exponent buys range; more mantissa buys precision.");
+  },
 });

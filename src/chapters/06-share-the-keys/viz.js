@@ -1,4 +1,5 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { tokens, arrow } from "../../assets/js/prims.js";
 
 // One decode step's KV read for 1,024 cached tokens, layer by layer.
 //   Qwen3-8B (A): 36 layers, 8 KV heads × 128 × 2 (K/V) × 2 B = 4,096 B per
@@ -66,4 +67,39 @@ mountScope("#fig-6-1", {
   ],
   build,
   draw: { a: layerDraw(A, "A · Qwen3-8B"), b: layerDraw(B, "B · gpt-oss-120B") },
+});
+
+/* ---- figure 6.2: grouped-query sharing, drawn --------------------------------
+ * One group per model, with the real repeats: Qwen3-8B 4 queries per KV head
+ * (32 q / 8 kv, repeat 4); gpt-oss-120B 8 queries per KV head (64 q / 8 kv,
+ * repeat 8). Pinned configs: qwen3-8b l12/l11, gptoss-120b head_dim 64.
+ * ---------------------------------------------------------------------------- */
+function groupDraw(r, ctx, q, id, note) {
+  const w = 18, gap = 3;
+  const items = [];
+  for (let i = 0; i < q; i++) items.push({ t: "Q", c: "s-ink-o", tc: "t-mono t-xs t-inv" });
+  tokens(r, "q" + id, { x: 0, y: 0, w, h: 20, gap, items, textCls: "t-mono t-xs t-inv" });
+  const lastX = q * (w + gap) - gap + 26;
+  arrow(r, "ar" + id, ctx, { x1: q * (w + gap) + 2, y1: 10, x2: lastX + 14, y2: 10, cls: "l-2" });
+  tokens(r, "kv" + id, {
+    x: lastX + 18, y: 0, w: 54, h: 20, gap: 2,
+    items: [{ t: "KV", c: "s-good" }],
+    textCls: "t-mono t-xs t-bold",
+  });
+  r.text("n" + id, { x: lastX + 84, y: 13, class: "t-xs t-2" }, note);
+}
+
+mountFigure("#fig-6-2", {
+  width: 760,
+  height: 150,
+  label: "Grouped-query attention: what one group looks like",
+  draw(r, ctx) {
+    r.text("ha", { x: 0, y: 14, class: "t-label" }, "A · Qwen3-8B — 32 queries share 8 KV heads, ×4");
+    groupDraw(r, ctx, 4, "a", "each KV head: 128 numbers wide");
+    r.text("hb", { x: 0, y: 76, class: "t-label" }, "B · gpt-oss-120B — 64 queries share 8 KV heads, ×8");
+    groupDraw(r, ctx, 8, "b", "each KV head: 64 numbers wide");
+
+    r.text("cap", { x: 0, y: 108, class: "t-xs t-dim" }, "The other groups are the same picture. Only the KV heads are stored, projected and cached —");
+    r.text("cap2", { x: 0, y: 124, class: "t-xs t-dim" }, "so a deeper stack of 36 layers with 8 KV heads paying 2 × 8 × head_dim bytes per token per layer.");
+  },
 });

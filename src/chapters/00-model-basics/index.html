@@ -24,6 +24,8 @@
 
 <p>In the smallest possible case, the output is this: a vector of two numbers, [1.0, 2.0], meets a matrix whose first row holds [0.5, 1.0] and second row [2.0, -0.5]. First output: 0.5 × 1.0 + 1.0 × 2.0 = 2.5. Second: 2.0 × 1.0 + (-0.5) × 2.0 = 1.0. Every projection everywhere in the model is exactly this, only wider — inside Qwen2.5-7B, n is 3,584 and m runs up to 18,944 <ref e="qwen25-7b" p="config.json" l="11" s="intermediate_size"></ref>, so one write-down of the rule covers millions of rows. The widths tell you the cost: that projection owns 3,584 × 18,944 weights, and the feed-forward that owns it is the single biggest ingredient of a block. Chapter 1 measures it; chapter 22 stores it more cheaply.</p>
 
+<figure id="fig-0-2"></figure>
+
 <h2 id="attention"><span class="h-num">0.4</span>Attention is a lookup</h2>
 
 <p>Each token's vector needs context from earlier tokens, and attention gathers it in three steps. Every position projects its vector into a <b>query</b> (what am I looking for), while earlier positions project into <b>keys</b> (what each offers) and <b>values</b> (what each hands over when chosen). Matching each query against every key gives scores; the scores squeeze to positive weights that sum to one; then attention returns the weighted blend of the values.</p>

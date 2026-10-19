@@ -18,6 +18,8 @@
 
 <p>The dense baselines declare bf16 and stop there <ref e="qwen25-7b" p="config.json" l="22" s="torch_dtype"></ref> <ref e="mistral-7b" p="config.json" l="20" s="torch_dtype"></ref> <ref e="dsv3" p="config.json" l="62" s="torch_dtype"></ref>. The flagships record narrower checkpoints with schemes and block sizes. GLM-5.3 and V4.1-Flash both quantize FP8 dynamically, with 128- and 32-wide scaling blocks respectively:</p>
 
+<figure id="fig-22-2"></figure>
+
 <div class="pair">
 <excerpt e="glm53" p="config.json" l="224-228" hl="226,227" s="quant_method" title="GLM-5.3: dynamic FP8, e4m3, 128-wide blocks"></excerpt>
 <excerpt e="dsv41-flash" p="config.json" l="12-16" hl="13" s="quant_method" title="V4.1-Flash: dynamic FP8, 32-wide blocks"></excerpt>
