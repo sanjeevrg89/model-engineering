@@ -34,6 +34,8 @@
 
 <p>Follow the tensors: <code>kv_a_proj_with_mqa</code> compresses hidden to rank 512 plus rotary once per token; at read time <code>kv_b_proj</code> expands the normalized latent to every head's content and value width. The expand runs per query against a small cached latent instead of streaming full per-head KV — that is the decode saving, in code rather than in prose. Prefill can instead reconstruct full keys and values and run standard attention; the two modes are mathematically the same attention with different memory traffic, which is why engines pick per phase.</p>
 
+<figure id="fig-8-2"></figure>
+
 <div class="callout callout--myth">
   <span class="label">Easy to get wrong</span>
   <p>MLA is not fewer heads. V3 configures 128 query heads and 128 KV heads and caches neither as such; the latent replaces both. Dividing hidden by heads to get a head dim, the chapter-6 habit, gives 56 here and means nothing — read the rank keys.</p>

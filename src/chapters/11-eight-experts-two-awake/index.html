@@ -18,6 +18,8 @@
 
 <p>Read the forward carefully. The gate returns weights and indices; the experts run on the flat token matrix; the result reshapes back. Training-only jitter multiplies the hidden states first <ref e="hf-transformers" p="src/transformers/models/mixtral/modeling_mixtral.py" l="128" s="jitter_noise"></ref> — inference never takes that branch, which is why a served model's routing is deterministic given the weights. The router itself (softmax over 8 logits, <code>torch.topk</code>, renormalize) lives in <code>MixtralTopKRouter</code> <ref e="hf-transformers" p="src/transformers/models/mixtral/modeling_mixtral.py" l="101" s="MixtralTopKRouter"></ref>, the chapter-1 excerpt.</p>
 
+<figure id="fig-11-2"></figure>
+
 <div class="numbers">
   <div><span class="v">176.2<small>M</small></span><span class="d">weights per expert: a full 4,096 × 14,336 SwiGLU</span></div>
   <div><span class="v">394.3<small>M</small></span><span class="d">active weights per MoE layer per token: 41.9M attention + 2 experts</span></div>

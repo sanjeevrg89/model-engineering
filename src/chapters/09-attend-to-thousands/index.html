@@ -8,6 +8,8 @@
 
 <p>The indexer is cheap on purpose: small dot-product heads that rank positions without computing values. Only the winners pay for full MLA. With 8,192 past tokens and a top-2,048 selection, the attention kernel reads one quarter of the cache — while storage keeps all 8,192, because next step's winners differ. Selection is per query, every step.</p>
 
+<figure id="fig-9-2"></figure>
+
 <h2 id="indexer"><span class="h-num">9.2</span>The indexer in the config</h2>
 
 <p>V3.2-Exp states the selection in two keys: keep 2,048 positions <ref e="dsv32-exp" p="config.json" l="15" s="index_topk"></ref>, renormalize their probabilities <ref e="dsv32-exp" p="config.json" l="26" s="norm_topk_prob"></ref>. GLM-5.3 keeps the 2,048 <ref e="glm53" p="config.json" l="22" s="index_topk"></ref> and sizes the scorer: 32 index heads of width 128 <ref e="glm53" p="config.json" l="19" s="index_n_heads"></ref> <ref e="glm53" p="config.json" l="18" s="index_head_dim"></ref>:</p>

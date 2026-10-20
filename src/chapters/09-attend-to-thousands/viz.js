@@ -1,4 +1,5 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { segbar } from "../../assets/js/prims.js";
 
 // Attending over 8,192 past tokens: dense MLA reads all 8,192 latents (A:
 // DeepSeek-V3.2-Exp without selection), indexed top-k reads 2,048 winners
@@ -87,5 +88,36 @@ mountScope("#fig-9-1", {
         "attending over 2,048 winners · 1/4 of the reads";
       r.text("st", { x: 0, y: 232, class: s.stage >= 2 ? "t-mono t-sm t-bold" : "t-xs t-dim" }, label);
     },
+  },
+});
+
+/* ---- figure 9.2: score everything, read one quarter --------------------------
+ * 8,192 past tokens, top-2,048 selected per query: the storage bar keeps all,
+ * the read bar highlights one quarter. Numbers from §9.1 (V3.2-Exp / GLM-5.3).
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-9-2", {
+  width: 760,
+  height: 210,
+  label: "DSA's split: storage stays whole, reads shrink to one quarter",
+  draw(r, ctx) {
+    r.text("l1", { x: 0, y: 12, class: "t-label" }, "What the cache stores");
+    segbar(r, "b1", {
+      x: 0, y: 24, w: 700, h: 32, total: 8192, unit: "", scale: false,
+      segs: [
+        { id: "all", n: 8192, c: "s-ink-o", t: "all 8,192 past tokens", tc: "t-mono t-xs t-inv" },
+      ],
+    });
+
+    r.text("l2", { x: 0, y: 96, class: "t-label" }, "What one attention kernel reads this step");
+    segbar(r, "b2", {
+      x: 0, y: 108, w: 700, h: 32, total: 8192, unit: "", scale: false,
+      segs: [
+        { id: "top", n: 2048, c: "s-a-solid", t: "top 2,048", tc: "t-mono t-xs t-inv" },
+        { id: "rest", n: 6144, c: "s-sunk", t: "not read — until it wins next step", tc: "t-mono t-xs t-dim" },
+      ],
+    });
+
+    r.text("cap", { x: 0, y: 178, class: "t-xs t-dim" }, "The indexer scores every position with cheap dot products; only winners pay for full MLA. Selection is per query, every step —");
+    r.text("cap2", { x: 0, y: 194, class: "t-xs t-dim" }, "which is why traffic (not capacity) shrinks, and why the next query's winners differ.");
   },
 });

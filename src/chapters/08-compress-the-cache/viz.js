@@ -1,4 +1,5 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { segbar } from "../../assets/js/prims.js";
 
 // Caching one token: Qwen2.5-7B's grouped KV (A) against DeepSeek-V2-Lite's
 // latent (B). Per-layer cached numbers: A = 4 heads × 128 × 2 (K/V) = 1,024;
@@ -80,5 +81,40 @@ mountScope("#fig-8-1", {
   draw: {
     a: cacheDraw(57344, 1024, "A · Qwen2.5-7B", ["Q", "K", "V", "cache", "read"]),
     b: cacheDraw(31104, 576, "B · DeepSeek-V2-Lite", ["latent", "nope", "rope", "cache", "expand"]),
+  },
+});
+
+/* ---- figure 8.2: MLA's storage ledger, one shared scale ----------------------
+ * Per layer per token: GQA (Qwen2.5-7B) stores 4 KV heads × (128 K + 128 V)
+ * = 1,024 numbers; MLA (V2-Lite) stores 512 latent + 64 rotary = 576 (+ 448
+ * empty to show the gap on the same 1,024 scale). Numbers from §8.1.
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-8-2", {
+  width: 760,
+  height: 190,
+  label: "What one cached token stores per layer, at one shared scale (1,024 numbers)",
+  draw(r, ctx) {
+    r.text("la", { x: 0, y: 12, class: "t-label" }, "A · grouped KV — stored per head");
+    segbar(r, "sba", {
+      x: 0, y: 24, w: 340, h: 30, total: 1024, unit: "", scale: false,
+      segs: [
+        { id: "k", n: 512, c: "s-ink-o", t: "K: 4 × 128", tc: "t-mono t-xs t-inv" },
+        { id: "v", n: 512, c: "s-good", t: "V: 4 × 128" },
+      ],
+    });
+    r.text("va", { x: 360, y: 42, class: "t-mono t-sm t-dim" }, "1,024 numbers · 4 heads only serve");
+
+    r.text("lb", { x: 0, y: 104, class: "t-label" }, "B · MLA — stored once");
+    segbar(r, "sbb", {
+      x: 0, y: 116, w: 340, h: 30, total: 1024, unit: "", scale: false,
+      segs: [
+        { id: "lat", n: 512, c: "s-a-solid", t: "latent 512", tc: "t-mono t-xs t-inv" },
+        { id: "rot", n: 64, c: "s-good", t: "64", tc: "t-mono t-xs" },
+        { id: "none", n: 448, c: "s-sunk", t: "—", tc: "t-mono t-xs t-dim" },
+      ],
+    });
+    r.text("vb", { x: 360, y: 134, class: "t-mono t-sm t-dim" }, "576 numbers · 16 heads served");
+
+    r.text("c1", { x: 0, y: 176, class: "t-xs t-dim" }, "Read time, kv_b_proj: the latent expands back per head — compute against a small cache beats streaming a big one. Gap widens vs wider GQA (§8.1).");
   },
 });

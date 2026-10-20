@@ -1,4 +1,5 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { box, tokens, arrow } from "../../assets/js/prims.js";
 
 // Generating 3 tokens: three sequential target passes (A) against draft-3
 // plus one verify pass (B). Acceptance is a reader-set parameter, not a
@@ -82,5 +83,45 @@ mountScope("#fig-21-1", {
         r.text("st", { x: 0, y: 110, class: "t-mono t-sm t-bold" }, "2 verified + 1 correction · 1 target pass");
       }
     },
+  },
+});
+
+/* ---- figure 21.2: the DSpark block machine -----------------------------------
+ * V4.1-Flash pinned config: 3 prediction layers (l145), block 5 with a noise
+ * token (l146/l147), verify at target layers 37-39 (l148), drafter is a tiny
+ * MoE of 128 experts / 3 active (l154/l155), rank-256 Markov chain (l153).
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-21-2", {
+  width: 760,
+  height: 250,
+  label: "DSpark: draft a 5-token block, verify once",
+  draw(r, ctx) {
+    box(r, "draft", { x: 0, y: 56, w: 150, h: 46, c: "s-panel", title: "drafter", sub: "3 of 128 experts · rank 256" });
+    arrow(r, "a1", ctx, { x1: 150, y1: 79, x2: 186, y2: 79 });
+
+    const items = [
+      { t: "d1", c: "s-a-solid", tc: "t-mono t-xs t-inv" },
+      { t: "d2", c: "s-a-solid", tc: "t-mono t-xs t-inv" },
+      { t: "d3", c: "s-a-solid", tc: "t-mono t-xs t-inv" },
+      { t: "d4", c: "s-a-solid", tc: "t-mono t-xs t-inv" },
+      { t: "n", c: "s-sunk", tc: "t-mono t-xs t-dim" },
+    ];
+    chips(r, "block", { x: 190, y: 68, title: null, items, w: 34, h: 22, gap: 3 });
+    r.text("bl", { x: 190, y: 104, class: "t-xs t-dim" }, "5-token block; n is the dedicated noise token");
+
+    arrow(r, "a2", ctx, { x1: 398, y1: 79, x2: 434, y2: 79 });
+    box(r, "verify", { x: 438, y: 56, w: 170, h: 46, c: "s-b-solid", title: "verify", sub: "target layers 37–39", titleCls: "t-bold" });
+
+    r.text("accept", { x: 438, y: 140, class: "t-label" }, "accept the longest verified prefix");
+    tokens(r, "res", { x: 438, y: 152, w: 30, h: 22, items: [
+      { t: "d1", c: "s-good", tc: "t-mono t-xs t-bold" },
+      { t: "d2", c: "s-good", tc: "t-mono t-xs t-bold" },
+      { t: "d3", c: "s-good", tc: "t-mono t-xs t-bold" },
+      { t: "d4", c: "s-sunk", tc: "t-mono t-xs t-dim" },
+    ], gap: 3 });
+    r.text("rej", { x: 588, y: 166, class: "t-xs t-dim" }, "one draft rejected → one target pass still banked 3 tokens (§21.1)");
+
+    r.text("c1", { x: 0, y: 218, class: "t-xs t-dim" }, "Drafting costs a fraction of a target pass (a tiny MoE); the rate that decides is α, measured on your traffic. §21.4's yield formula (1 − α^{k+1}) / (1 − α)");
+    r.text("c2", { x: 0, y: 234, class: "t-xs t-dim" }, "gives the expectation for a block of k drafts; the picture above only shows one possible outcome: 3 banked, d4 rejected. Pinned numbers: 3 layers, block 5, targets 37–39.");
   },
 });

@@ -1,4 +1,5 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { box, chips, tokens, arrow } from "../../assets/js/prims.js";
 
 // One token through a dense MLP (A: Mistral-7B) and a top-2-of-8 MoE block
 // (B: Mixtral-8x7B). Expert scores are fixed and tie-free, standing in for the
@@ -90,5 +91,39 @@ mountScope("#fig-11-1", {
         r.text("rn", { x: 0, y: 162, class: "t-xs t-dim" }, s.stage === 0 ? "scores stand in for the router softmax" : "two winners, six idle residents");
       }
     },
+  },
+});
+
+/* ---- figure 11.2: the router's pick ------------------------------------------
+ * Mixtral-8x7B: 8 local experts, top-2 per token, renormalized weighted sum
+ * (config l15/l18). Expert identities follow §11.3's own example: picks 2+5.
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-11-2", {
+  width: 760,
+  height: 250,
+  label: "One token routes through the expert layer",
+  draw(r, ctx) {
+    tokens(r, "tok", { x: 0, y: 60, w: 46, h: 24, items: [{ t: "tok", c: "s-a-solid", tc: "t-mono t-xs t-inv" }] });
+    box(r, "router", { x: 78, y: 52, w: 92, h: 40, c: "s-panel", title: "router", sub: "8 logits" });
+    arrow(r, "a1", ctx, { x1: 46, y1: 72, x2: 74, y2: 72 });
+
+    const items = [];
+    for (let i = 0; i < 8; i++) {
+      const pick = i === 1 || i === 4;
+      items.push({ t: "e" + i, c: pick ? "s-a-solid" : "s-panel", tc: pick ? "t-mono t-xs t-inv" : "t-mono t-xs t-dim" });
+    }
+    chips(r, "exp", { x: 210, y: 60, title: null, items, w: 56, h: 24, gap: 4 });
+    arrow(r, "a2", ctx, { x1: 170, y1: 72, x2: 206, y2: 72 });
+
+    r.text("pa", { x: 210, y: 44, class: "t-label" }, "eight experts awake as two");
+    r.text("pb", { x: 210, y: 100, class: "t-xs t-dim" }, "scores → top-2 → renormalize the two weights to sum to one");
+
+    arrow(r, "drop1", ctx, { x1: 240, y1: 86, x2: 470, y2: 156, bend: 40 });
+    arrow(r, "drop2", ctx, { x1: 464, y1: 86, x2: 498, y2: 156, bend: 24 });
+    box(r, "ws", { x: 440, y: 160, w: 128, h: 34, c: "s-good", title: "weighted sum" });
+    arrow(r, "a4", ctx, { x1: 568, y1: 177, x2: 600, y2: 177, head: false, cls: "l-2" });
+    r.text("go", { x: 606, y: 181, class: "t-mono t-xs t-dim" }, "→ next block");
+
+    r.text("c1", { x: 0, y: 190, class: "t-xs t-dim" }, "176.2M weights per expert; exactly two run. Routing follows content — the next token picks again, which is why balance (§11.3) and jitter exist.");
   },
 });
