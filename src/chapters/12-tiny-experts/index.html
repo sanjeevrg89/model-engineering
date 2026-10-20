@@ -4,6 +4,8 @@
 
 <h2 id="fine"><span class="h-num">12.1</span>Two hundred fifty-six small experts</h2>
 
+<aside class="side"><span class="label">First time here?</span><p><a href="../../ch/00-model-basics/#matmul">Chapter 0</a> defines token, vector, weights and the projection in ten minutes, with worked numbers from the same two configs. This chapter assumes them.</p></aside>
+
 <figure id="fig-12-1"></figure>
 
 <p>The config states the scale: 256 routed experts <ref e="dsv3" p="config.json" l="26" s="n_routed_experts"></ref>, 8 active per token <ref e="dsv3" p="config.json" l="30" s="num_experts_per_tok"></ref>, each with an intermediate width of 2,048 <ref e="dsv3" p="config.json" l="23" s="moe_intermediate_size"></ref> against a hidden width of 7,168 <ref e="dsv3" p="config.json" l="17" s="hidden_size"></ref>. One expert holds 3 × 7,168 × 2,048 ≈ 44.0M weights — one quarter of a Mixtral expert — and a token visits eight plus one shared: about 396.4M of MLP per MoE layer. Routing 256 experts needs constraint, so V3 groups them in 8 and picks across at most 4 groups <ref e="dsv3" p="config.json" l="25" s="n_group"></ref> <ref e="dsv3" p="config.json" l="60" s="topk_group"></ref>, with auxiliary-loss-free balancing <ref e="dsv3" p="config.json" l="61" s="topk_method"></ref>.</p>

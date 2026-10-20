@@ -4,6 +4,8 @@
 
 <h2 id="receipt"><span class="h-num">20.1</span>Two receipts for one token</h2>
 
+<aside class="side"><span class="label">First time here?</span><p><a href="../../ch/00-model-basics/#attention">Chapter 0</a> defines token, vector, head and the attention lookup in ten minutes, with worked numbers from the same two configs. This chapter assumes them.</p></aside>
+
 <figure id="fig-20-1"></figure>
 
 <p>Four kinds of state exist on the roster. Standard KV grows with heads, layers and width. MLA latents grow with rank and layers. Recurrent states (Mamba-2, Gated DeltaNet, KDA, Lightning) are fixed per layer no matter the context. Indexer keys grow with index heads and width, and diffusion keeps no cache because bidirectional attention never reuses one. The figure stacks A's single kind against B's two; the table prices all four.</p>

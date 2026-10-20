@@ -4,6 +4,8 @@
 
 <h2 id="scale"><span class="h-num">15.1</span>Eight hundred ninety-six experts</h2>
 
+<aside class="side"><span class="label">First time here?</span><p><a href="../../ch/00-model-basics/#matmul">Chapter 0</a> defines token, vector, weights and the projection in ten minutes, with worked numbers from the same two configs. This chapter assumes them.</p></aside>
+
 <figure id="fig-15-1"></figure>
 
 <p>The text stack states it plainly: 896 routed experts with 16 active per token <ref e="kimi-k3" p="config.json" l="185" s="num_experts"></ref> <ref e="kimi-k3" p="config.json" l="186" s="num_experts_per_token"></ref>, 2 shared experts beside them <ref e="kimi-k3" p="config.json" l="191" s="num_shared_experts"></ref>, 93 layers deep <ref e="kimi-k3" p="config.json" l="187" s="num_hidden_layers"></ref>. The awake share falls to 1.8% of routed experts — V3 woke 3.1%, Mixtral 25%. Each generation spends about the same per token and houses multiples more.</p>

@@ -4,6 +4,8 @@
 
 <h2 id="latent"><span class="h-num">8.1</span>One latent instead of a thousand numbers</h2>
 
+<aside class="side"><span class="label">First time here?</span><p><a href="../../ch/00-model-basics/#attention">Chapter 0</a> defines token, vector, head and the attention lookup in ten minutes, with worked numbers from the same two configs. This chapter assumes them.</p></aside>
+
 <figure id="fig-8-1"></figure>
 
 <p>Count what gets stored per layer. Qwen2.5-7B writes 4 heads × 128 keys plus 4 × 128 values: 1,024 numbers. V2-Lite writes a 512-number latent <ref e="dsv2-lite" p="config.json" l="20" s="kv_lora_rank"></ref> plus a 64-number rotary key: 576 numbers, 44% fewer, and the gap widens against wider GQA. Across 27 layers that is 31,104 B per token in bf16 against Qwen's 57,344 B — with 16 query heads <ref e="dsv2-lite" p="config.json" l="29" s="num_attention_heads"></ref> served, not 4.</p>

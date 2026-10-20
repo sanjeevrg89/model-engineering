@@ -4,6 +4,8 @@
 
 <h2 id="route"><span class="h-num">11.1</span>Eight experts, two awake</h2>
 
+<aside class="side"><span class="label">First time here?</span><p><a href="../../ch/00-model-basics/#matmul">Chapter 0</a> defines token, vector, weights and the projection in ten minutes, with worked numbers from the same two configs. This chapter assumes them.</p></aside>
+
 <figure id="fig-11-1"></figure>
 
 <p>The dense side runs its one MLP unconditionally. The MoE side scores all eight experts, keeps the top two, runs exactly those, and returns their weighted sum. Everything else — attention, norms, residuals — is identical, which is why Mixtral reads as Mistral with a choice bolted on.</p>

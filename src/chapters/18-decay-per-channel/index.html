@@ -4,6 +4,8 @@
 
 <h2 id="decay"><span class="h-num">18.1</span>One gate per head, one gate per channel</h2>
 
+<aside class="side"><span class="label">First time here?</span><p><a href="../../ch/00-model-basics/#attention">Chapter 0</a> defines token, vector, head and the attention lookup in ten minutes, with worked numbers from the same two configs. This chapter assumes them.</p></aside>
+
 <figure id="fig-18-1"></figure>
 
 <p>The difference is resolution. A scalar gate keeps or drops a head's whole memory row at once; a channel-wise gate keeps the syntax channels and drops the stale topic channels, or the reverse next token. The Kimi Linear paper, which introduces KDA as a refinement of Gated DeltaNet, reports the 3:1 KDA-to-MLA hybrid beating full attention at matched scale across short-context, long-context and RL post-training — cited here as the paper's claim (arXiv:2510.26692), with the config below as the shipped evidence.</p>

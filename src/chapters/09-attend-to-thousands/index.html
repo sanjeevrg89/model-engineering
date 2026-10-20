@@ -4,6 +4,8 @@
 
 <h2 id="shortlist"><span class="h-num">9.1</span>Score everything, attend to thousands</h2>
 
+<aside class="side"><span class="label">First time here?</span><p><a href="../../ch/00-model-basics/#attention">Chapter 0</a> defines token, vector, head and the attention lookup in ten minutes, with worked numbers from the same two configs. This chapter assumes them.</p></aside>
+
 <figure id="fig-9-1"></figure>
 
 <p>The indexer is cheap on purpose: small dot-product heads that rank positions without computing values. Only the winners pay for full MLA. With 8,192 past tokens and a top-2,048 selection, the attention kernel reads one quarter of the cache — while storage keeps all 8,192, because next step's winners differ. Selection is per query, every step.</p>
