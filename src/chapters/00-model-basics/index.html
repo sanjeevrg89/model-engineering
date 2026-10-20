@@ -30,6 +30,8 @@
 
 <p>Each token's vector needs context from earlier tokens, and attention gathers it in three steps. Every position projects its vector into a <b>query</b> (what am I looking for), while earlier positions project into <b>keys</b> (what each offers) and <b>values</b> (what each hands over when chosen). Matching each query against every key gives scores; the scores squeeze to positive weights that sum to one; then attention returns the weighted blend of the values.</p>
 
+<figure id="fig-0-3"></figure>
+
 <p>The lookup runs in parallel copies called <b>heads</b> — 28 of them in Qwen2.5-7B <ref e="qwen25-7b" p="config.json" l="15" s="num_attention_heads"></ref>, each with its own query, key and value matrices — so one head can track syntax while another tracks who "it" refers to. The pronoun is worth watching, because it is where the whole mechanism earns its keep. In "the cat chased the mouse because it was hungry", the word "it" is ambiguous — only earlier context can decide. At its position, a head issues a query that amounts to "who was hungry?"; the keys of "cat" and "mouse" both match, "cat" a little better; and the blended value that comes back encodes the answer inside the token's vector. No rule book was consulted: the scores are arithmetic between vectors, learned by training. Heads are the machine's eyes; how many get cached, shared or compressed is chapters 1, 6, 8 and 9.</p>
 
 <h2 id="norm"><span class="h-num">0.5</span>Normalization</h2>

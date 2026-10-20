@@ -113,3 +113,50 @@ mountFigure("#fig-0-2", {
     r.text("note", { x: 0, y: 92, class: "t-xs t-dim" }, "In the real models n is 3,584 / 4,096 and m up to 18,944 — same rule, just many more rows.");
   },
 });
+
+/* ---- figure 0.3: the lookup, drawn ------------------------------------------
+ * Schematic only: three past tokens with keys and values, scores that become
+ * weights (illustrative numbers, not measurements), a blended output.
+ * Mirrors §0.4's three steps: score, squeeze to weights, blend values.
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-0-3", {
+  width: 760,
+  height: 270,
+  label: "The lookup, drawn: a query scores keys, then blends values",
+  draw(r, ctx) {
+    const past = [
+      { tok: "the", k: "K", v: "V", w: 0.6 },
+      { tok: "cat", k: "K", v: "V", w: 0.3 },
+      { tok: "chased", k: "K", v: "V", w: 0.1 },
+    ];
+    r.text("ch", { x: 0, y: 12, class: "t-xs t-dim" }, "earlier positions");
+    r.text("sc", { x: 300, y: 12, class: "t-xs t-dim" }, "score → weight");
+    past.forEach((p, i) => {
+      const y = 26 + i * 40;
+      tokens(r, "tok" + i, { x: 0, y, w: 72, h: 26, items: [{ t: p.tok, c: "s-panel", tc: "t-mono t-xs" }] });
+      tokens(r, "kv" + i, {
+        x: 84, y, w: 30, h: 26, gap: 4,
+        items: [
+          { t: p.k, c: "s-ink-o", tc: "t-mono t-xs t-inv" },
+          { t: p.v, c: "s-good", tc: "t-mono t-xs" },
+        ],
+      });
+      const bg = r.g("bar" + i, 300, y + 6);
+      bg.rect("r", { width: 220, height: 14, rx: 7, class: "s-sunk" });
+      bg.rect("f", { width: Math.max(4, 220 * p.w), height: 14, rx: 7, class: "s-a-solid" });
+      r.text("w" + i, { x: 532, y: y + 17, class: "t-mono t-xs" }, p.w.toFixed(1));
+    });
+    r.text("note", { x: 300, y: 152, class: "t-xs t-dim" }, "weights sum to 1 · illustrative scores, real ones are learned");
+
+    tokens(r, "q", { x: 0, y: 180, w: 72, h: 26, items: [{ t: "it", c: "s-a-solid", tc: "t-mono t-xs t-inv" }] });
+    tokens(r, "qq", { x: 84, y: 180, w: 46, h: 26, items: [{ t: "Q", c: "s-ink-o", tc: "t-mono t-xs t-inv" }] });
+    r.text("ql", { x: 140, y: 197, class: "t-xs t-dim" }, "what am I looking for?");
+    arrow(r, "a1", ctx, { x1: 430, y1: 193, x2: 468, y2: 193 });
+    box(r, "blend", { x: 472, y: 176, w: 180, h: 34, c: "s-panel", title: "weighted blend of values", align: "middle", titleCls: "t-xs t-bold" });
+    arrow(r, "a2", ctx, { x1: 652, y1: 193, x2: 686, y2: 193 });
+    tokens(r, "out", { x: 690, y: 180, w: 46, h: 26, items: [{ t: "→", c: "s-good", tc: "t-mono t-xs" }] });
+
+    r.text("cap", { x: 0, y: 238, class: "t-xs t-dim" }, "Every earlier position offers a key (what it has) and a value (what it hands over). The query's match with each key sets the mix;");
+    r.text("cap2", { x: 0, y: 254, class: "t-xs t-dim" }, "the output is mostly 'cat' here, which is how the pronoun gets its meaning (§0.4).");
+  },
+});
