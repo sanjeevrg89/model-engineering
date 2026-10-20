@@ -8,6 +8,8 @@
 
 <p>Four kinds of state exist on the roster. Standard KV grows with heads, layers and width. MLA latents grow with rank and layers. Recurrent states (Mamba-2, Gated DeltaNet, KDA, Lightning) are fixed per layer no matter the context. Indexer keys grow with index heads and width, and diffusion keeps no cache because bidirectional attention never reuses one. The figure stacks A's single kind against B's two; the table prices all four.</p>
 
+<figure id="fig-20-2"></figure>
+
 <h2 id="kinds"><span class="h-num">20.2</span>Four kinds of leftovers</h2>
 
 <p><strong>Standard KV</strong> is 2 × layers × KV heads × head_dim × bytes. Seven roster models pay it, from 57,344 B (Qwen2.5-7B) to 376,832 B (GLM-4.5), with gpt-oss-120B's narrow heads at 73,728 B — chapter 6's table, unchanged.</p>

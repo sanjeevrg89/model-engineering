@@ -1,4 +1,4 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
 
 // One token's receipt: Qwen2.5-7B's single-kind KV (A) against V3.2-Exp's
 // latent-plus-index (B). Bytes in bf16: A = 57,344 (2*28*4*128*2);
@@ -80,5 +80,47 @@ mountScope("#fig-20-1", {
       { label: "latent", bytes: "70,272 B", frac: 0.72 },
       { label: "index keys", bytes: "per chapter 9", frac: 0.28 },
     ], "B · two-kind receipt", "s-b"),
+  },
+});
+
+/* ---- figure 20.2: four receipts, four growth rules ---------------------------
+ * State kinds from §20.2: standard KV and indexer keys grow with tokens; MLA
+ * latents grow with rank and layers; recurrent state is fixed per layer;
+ * diffusion keeps no reusable cache. Glyphs are schematic, not to scale.
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-20-2", {
+  width: 760,
+  height: 280,
+  label: "Four kinds of leftover state, four growth rules",
+  draw(r, ctx) {
+    const rows = [
+      { name: "standard KV", note: "2 × layers × KV heads × head_dim", grow: true, cls: "s-a-solid", formula: "grows with tokens" },
+      { name: "MLA latent", note: "layers × (rank + rotary)", grow: true, cls: "s-good", formula: "grows with tokens" },
+      { name: "indexer keys", note: "tokens × index heads × index width", grow: true, cls: "s-b-solid", formula: "grows with tokens" },
+      { name: "recurrent state", note: "fixed per layer, no token term", grow: false, cls: "s-ink-o", formula: "constant" },
+      { name: "diffusion cache", note: "bidirectional attention reuses nothing", grow: null, cls: "s-sunk", formula: "zero" },
+    ];
+    rows.forEach((row, i) => {
+      const y = 20 + i * 50;
+      r.text("n" + i, { x: 0, y: y + 16, class: "t-mono t-sm t-end" }, row.name);
+      if (row.grow === true) {
+        [18, 30, 44].forEach((h, j) => {
+          const g = r.g("g" + i + ":" + j, 170 + j * 30, y + 30 - h);
+          g.rect("r", { width: 18, height: h, rx: 2, class: row.cls });
+        });
+      } else if (row.grow === false) {
+        [18, 18, 18].forEach((h, j) => {
+          const g = r.g("g" + i + ":" + j, 170 + j * 30, y + 30 - h);
+          g.rect("r", { width: 18, height: h, rx: 2, class: row.cls });
+        });
+      } else {
+        const g = r.g("g" + i, 170, y + 4);
+        g.rect("r", { width: 78, height: 26, rx: 3, class: "s-free" });
+        g.text("t", { x: 39, y: 17, class: "t-mono t-xs t-dim" }, "0");
+      }
+      r.text("f" + i, { x: 268, y: y + 12, class: "t-mono t-xs" }, row.formula);
+      r.text("m" + i, { x: 268, y: y + 28, class: "t-xs t-dim" }, row.note);
+    });
+    r.text("cap", { x: 0, y: 266, class: "t-xs t-dim" }, "Receipts run from 0 B to 376,832 B per token on the roster — price one row's kinds, never the columns' sum (§20.2).");
   },
 });

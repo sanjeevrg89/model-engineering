@@ -1,4 +1,5 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { box, tokens } from "../../assets/js/prims.js";
 
 // Updating one memory row of 8 features. A (Gated DeltaNet): one scalar gate
 // g = 0.7 decays the whole row. B (Kimi Delta Attention): a per-channel decay
@@ -83,5 +84,38 @@ mountScope("#fig-18-1", {
   draw: {
     a: rowDraw(OLD, null, "A · scalar gate g = 0.7", "gates: [0.7] — one value for all 8 features"),
     b: rowDraw(OLD, null, "B · per-channel decays", "gates: [0.9 0.3 0.95 0.2 0.85 0.25 0.9 0.35]"),
+  },
+});
+
+/* ---- figure 18.2: resolution of forgetting -----------------------------------
+ * Same fixed-size memory row per head. Gated DeltaNet applies one scalar gate
+ * per head; KDA applies one decay per feature channel. Channel values shown are
+ * illustrative alphas, not measured; the -5.0 lower bound is the pinned config's
+ * gate floor (§18.2's numbers strip).
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-18-2", {
+  width: 760,
+  height: 230,
+  label: "One gate per head, or one decay per channel",
+  draw(r, ctx) {
+    r.text("ha", { x: 0, y: 12, class: "t-label" }, "A · Gated DeltaNet — one scalar decides the whole row");
+    tokens(r, "rowa", {
+      x: 150, y: 24, w: 62, h: 28, gap: 4,
+      items: Array.from({ length: 8 }, (_, i) => ({ t: "c" + i, c: "s-panel", tc: "t-mono t-xs t-dim" })),
+    });
+    arrow(r, "ga", ctx, { x1: 72, y1: 38, x2: 146, y2: 38, cls: "l-2" });
+    box(r, "gate", { x: 0, y: 22, w: 64, h: 32, c: "s-sunk", title: "g", align: "middle", titleCls: "t-mono t-sm t-bold" });
+    r.text("na", { x: 0, y: 72, class: "t-xs t-dim" }, "one learned number × every channel: keep or drop the row together");
+
+    r.text("hb", { x: 0, y: 120, class: "t-label" }, "B · Kimi Delta Attention — one decay per channel");
+    const alphas = ["0.99", "0.42", "0.88", "0.10", "0.97", "0.33", "0.75", "0.55"];
+    tokens(r, "rowb", {
+      x: 0, y: 132, w: 88, h: 30, gap: 4,
+      items: alphas.map((a, i) => ({ t: "α" + (i + 1), c: i % 2 ? "s-good" : "s-panel", tc: "t-mono t-xs" })),
+    });
+    alphas.forEach((a, i) => {
+      r.text("v" + i, { x: 44 + i * 92, y: 180, class: "t-mono t-xs t-mid t-dim" }, a);
+    });
+    r.text("nb", { x: 0, y: 200, class: "t-xs t-dim" }, "syntax channels can persist while stale topic channels decay — finer forgetting, same fixed-size state (gate floor −5.0, §18.2)");
   },
 });

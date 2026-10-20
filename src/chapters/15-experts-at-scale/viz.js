@@ -1,4 +1,5 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { segbar } from "../../assets/js/prims.js";
 
 // Routing one token at two scales: V3 top-8 of 256 in ≤4 groups (A) against
 // Kimi-K3 top-16 of 896 flat plus 2 shared (B). A grid: 8 groups of 32 with
@@ -76,4 +77,35 @@ mountScope("#fig-15-1", {
   ],
   build,
   draw: { a: poolDraw(256, 32, A_PICKS, 1, "A · 8 groups of 32", "s-a"), b: poolDraw(896, 56, B_PICKS, 2, "B · flat pool of 896", "s-b") },
+});
+
+/* ---- figure 15.2: the awake share across generations -------------------------
+ * Routed / awake: Mixtral 8 / 2 (25%), V3 256 / 8 (3.1%), K3 896 / 16 (1.8%).
+ * Percentages are the chapter's own (§15.1). Same bar width, honest total.
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-15-2", {
+  width: 760,
+  height: 220,
+  label: "Capacity multiplies; the awake sliver shrinks",
+  draw(r, ctx) {
+    const rows = [
+      { name: "Mixtral-8x7B", n: 8, awake: 2, pct: "25%" },
+      { name: "DeepSeek-V3", n: 256, awake: 8, pct: "3.1%" },
+      { name: "Kimi-K3", n: 896, awake: 16, pct: "1.8%" },
+    ];
+    rows.forEach((row, i) => {
+      const y = 26 + i * 56;
+      r.text("n" + i, { x: 0, y: y + 14, class: "t-mono t-sm t-end" }, row.name);
+      segbar(r, "b" + i, {
+        x: 150, y: y, w: 470, h: 28, total: row.n, scale: false,
+        segs: [
+          { id: "aw", n: row.awake, c: "s-a-solid" },
+          { id: "rest", n: row.n - row.awake, c: "s-sunk" },
+        ],
+      });
+      r.text("p" + i, { x: 632, y: y + 18, class: "t-mono t-sm t-bold" }, row.pct);
+      r.text("s" + i, { x: 150, y: y + 42, class: "t-xs t-dim" }, `${row.awake} of ${row.n} routed experts awake per token`);
+    });
+    r.text("cap", { x: 0, y: 206, class: "t-xs t-dim" }, "All resident, all reachable: any token can pick any expert, so nothing can be offloaded (chapter 15's placement point).");
+  },
 });

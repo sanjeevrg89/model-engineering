@@ -1,4 +1,5 @@
-import { mountScope } from "../../assets/js/scope.js";
+import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { box, chips } from "../../assets/js/prims.js";
 
 // One token's expert picks: Mixtral top-2 of 8 flat (A) against DeepSeek-V3
 // top-8 of 256 in ≤4 of 8 groups (B). B's grid shows 8 groups of 32 experts;
@@ -75,5 +76,40 @@ mountScope("#fig-12-1", {
       r.text("sh", { x: 0, y: 118, class: "t-mono t-xs" + (s.stage >= 2 ? " t-bold" : " t-dim") }, s.stage >= 2 ? "+ shared expert: always on (44M)" : "+ 1 shared expert every token");
       r.text("tot", { x: 0, y: 140, class: "t-mono t-sm" }, s.stage >= 3 ? "active 396.4M / resident 11.5B per layer" : s.stage >= 2 ? "8 × 44M + shared running" : "scoring 256 experts");
     },
+  },
+});
+
+/* ---- figure 12.2: group-constrained routing ----------------------------------
+ * DeepSeek-V3 pinned config: 256 routed experts (l26), 8 in 8 groups (l25),
+ * top-8 per token (l30) chosen within at most 4 groups (l60), 1 shared
+ * expert (l27). Each expert 44.0M weights (§12.1).
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-12-2", {
+  width: 760,
+  height: 250,
+  label: "256 experts, eight groups, at most four groups consulted",
+  draw(r, ctx) {
+    r.text("h1", { x: 0, y: 12, class: "t-label" }, "routed experts: 8 groups × 32");
+    for (let i = 0; i < 8; i++) {
+      const lit = i === 1 || i === 4;
+      box(r, "g" + i, {
+        x: i * 92, y: 24, w: 80, h: 38,
+        c: lit ? "s-a-solid" : "s-panel",
+        title: "g" + i, sub: "32", align: "middle",
+        titleCls: "t-mono t-sm t-bold" + (lit ? " t-inv" : ""),
+        subCls: "t-mono t-xs" + (lit ? " t-inv" : " t-dim"),
+      });
+    }
+    r.text("g1", { x: 0, y: 78, class: "t-xs t-dim" }, "the router picks the top 8 experts, but only inside at most 4 groups — two lit groups shown");
+
+    r.text("h2", { x: 0, y: 116, class: "t-label" }, "what a token actually runs");
+    box(r, "routed", { x: 0, y: 128, w: 300, h: 40, c: "s-panel", title: "8 routed experts", sub: "44.0M weights each", align: "middle", subCls: "t-mono t-xs t-dim t-mid" });
+    r.text("plus", { x: 312, y: 152, class: "t-mono t-sm" }, "+");
+    box(r, "shared", { x: 330, y: 128, w: 210, h: 40, c: "s-good", title: "1 shared expert", sub: "always on", align: "middle", subCls: "t-mono t-xs t-dim t-mid" });
+    r.text("eq", { x: 552, y: 152, class: "t-mono t-sm" }, "=");
+    r.text("total", { x: 570, y: 146, class: "t-mono t-sm t-bold" }, "396.4M");
+    r.text("total2", { x: 570, y: 160, class: "t-xs t-dim" }, "MLP per MoE layer");
+
+    r.text("cap", { x: 0, y: 200, class: "t-xs t-dim" }, "Fine-grained: 32× the expert count of Mixtral against the same per-token spend. The first 3 layers stay dense (§12.3).");
   },
 });

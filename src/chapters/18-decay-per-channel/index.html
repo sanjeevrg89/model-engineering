@@ -8,6 +8,8 @@
 
 <p>The difference is resolution. A scalar gate keeps or drops a head's whole memory row at once; a channel-wise gate keeps the syntax channels and drops the stale topic channels, or the reverse next token. The Kimi Linear paper, which introduces KDA as a refinement of Gated DeltaNet, reports the 3:1 KDA-to-MLA hybrid beating full attention at matched scale across short-context, long-context and RL post-training — cited here as the paper's claim (arXiv:2510.26692), with the config below as the shipped evidence.</p>
 
+<figure id="fig-18-2"></figure>
+
 <h2 id="config"><span class="h-num">18.2</span>The shipped evidence</h2>
 
 <p>Kimi-K3's text stack declares itself <code>kimi_linear</code> <ref e="kimi-k3" p="config.json" l="175" s="model_type"></ref>, runs 93 layers deep <ref e="kimi-k3" p="config.json" l="187" s="num_hidden_layers"></ref>, and sets <code>mla_use_nope: true</code> <ref e="kimi-k3" p="config.json" l="173" s="mla_use_nope"></ref>: the periodic full-attention layers add no position embeddings of their own. Position rides the KDA layers instead — the dedicated position-aware operator beside global NoPE attention:</p>
