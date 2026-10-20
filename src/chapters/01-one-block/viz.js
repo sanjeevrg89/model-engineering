@@ -1,4 +1,5 @@
 import { mountScope, mountFigure } from "../../assets/js/scope.js";
+import { box, tokens, arrow } from "../../assets/js/prims.js";
 
 // One token vector through one decoder block, twice: Qwen2.5-7B's dimensions on
 // channel A, Mistral-7B-v0.1's on channel B. Widths, head counts, repeat factors
@@ -119,5 +120,61 @@ mountFigure("#fig-1-2", {
       g.text("v", { x: w + 8, y: 13, class: "t-mono t-xs" }, `${v.toLocaleString("en-US")} B`);
     });
     r.text("cap", { x: 0, y: 244, class: "t-xs t-dim" }, "2 × layers × KV heads × head_dim × 2 B. MLA and hybrid models keep latents or fixed states instead (chapters 8, 20).");
+  },
+});
+
+/* ---- figure 1.3: the five steps, drawn ---------------------------------------
+ * The §1.3 walk with Qwen2.5-7B's widths: q out 3,584 (28 heads × 128), k/v
+ * out 512 (4 heads × 128), cache append per layer, mask → softmax → Σ, output
+ * projection back to 3,584. All numbers from the pinned config (§1.3).
+ * ---------------------------------------------------------------------------- */
+mountFigure("#fig-1-3", {
+  width: 760,
+  height: 230,
+  label: "One layer's attention, in five moves (Qwen2.5-7B widths)",
+  draw(r, ctx) {
+    const steps = [
+      { n: "1 · project", s: "q: 3,584 · kv: 512" },
+      { n: "2 · position", s: "RoPE on q, k" },
+      { n: "3 · cache", s: "append k, v", hot: true },
+      { n: "4 · score + blend", s: "mask → mix → Σ" },
+      { n: "5 · project out", s: "→ 3,584" },
+    ];
+    steps.forEach((st, i) => {
+      const x = i * 150;
+      box(r, "st" + i, {
+        x, y: 34, w: 130, h: 52,
+        c: st.hot ? "s-b-solid" : "s-panel",
+        title: st.n, sub: st.s, align: "middle",
+        titleCls: "t-mono t-xs t-bold" + (st.hot ? " t-inv" : ""),
+        subCls: "t-mono t-xs" + (st.hot ? " t-inv" : " t-dim"),
+      });
+      if (i < 4) arrow(r, "ar" + i, ctx, { x1: x + 130, y1: 60, x2: x + 146, y2: 60, cls: "l-2" });
+    });
+
+    r.text("u1", { x: 0, y: 112, class: "t-xs t-dim" }, "28 heads × 128 wide");
+    r.text("u3", { x: 300, y: 112, class: "t-xs t-dim" }, "4 heads × 128 per layer");
+
+    tokens(r, "cache", {
+      x: 300, y: 122, w: 26, h: 22, gap: 3,
+      items: [
+        { t: "t-4", c: "s-sunk", tc: "t-mono t-xs t-dim" },
+        { t: "t-3", c: "s-sunk", tc: "t-mono t-xs t-dim" },
+        { t: "t-2", c: "s-sunk", tc: "t-mono t-xs t-dim" },
+        { t: "t-1", c: "s-sunk", tc: "t-mono t-xs t-dim" },
+        { t: "t", c: "s-b-solid", tc: "t-mono t-xs t-inv" },
+      ],
+    });
+    r.text("cl", { x: 300, y: 158, class: "t-xs t-dim" }, "the append happens on every generated token");
+
+    tokens(r, "w", {
+      x: 470, y: 128, w: 20, h: 12, gap: 2,
+      items: [
+        { t: "", c: "s-a-solid" }, { t: "", c: "s-a-solid" }, { t: "", c: "s-sunk" },
+      ],
+    });
+    r.text("wl", { x: 470, y: 158, class: "t-xs t-dim" }, "weights from softmax, applied to values");
+
+    r.text("cap", { x: 0, y: 196, class: "t-xs t-dim" }, "Same five moves in every one of the 28 layers; only step 3 writes state that outlives the step. Steps 1–2 also appear in the chapter-6 walk.");
   },
 });
